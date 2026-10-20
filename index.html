@@ -1,0 +1,3191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>漢來教育訓練簽到</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 工具型後台 — 上方分頁列，左列課程、右側明細；投影頁與學員頁各自全幅單欄 */
+:root{
+  --bg:#F5F7F6; --surface:#FFFFFF; --ink:#18272A; --muted:#5D6D70; --line:#DCE3E1;
+  --jade:#0E6B5A; --jade-soft:#E2F0EC; --brass:#9A7631; --brass-soft:#F4ECDC;
+  --ok:#1F7A4A; --warn:#A8620B; --warn-soft:#FBEEDB; --bad:#B23A32; --bad-soft:#F8E3E1;
+  --chip:#EEF2F1;
+  --f-display:"Noto Serif TC","Songti TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101718; --surface:#172123; --ink:#E4ECEA; --muted:#97A7A8; --line:#2A3739;
+  --jade:#4FBFA6; --jade-soft:#173431; --brass:#D2AE68; --brass-soft:#2F2818;
+  --ok:#5CC48C; --warn:#E3A24D; --warn-soft:#352715; --bad:#EE7C72; --bad-soft:#3A1E1C; --chip:#1F2C2E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101718; --surface:#172123; --ink:#E4ECEA; --muted:#97A7A8; --line:#2A3739;
+  --jade:#4FBFA6; --jade-soft:#173431; --brass:#D2AE68; --brass-soft:#2F2818;
+  --ok:#5CC48C; --warn:#E3A24D; --warn-soft:#352715; --bad:#EE7C72; --bad-soft:#3A1E1C; --chip:#1F2C2E; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.3}
+.wrap{max-width:1160px;margin:0 auto}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.label{font-size:12px;letter-spacing:.06em;color:var(--muted)}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:22px 14px;border-bottom:1px solid var(--line)}
+.brand h1{font-family:var(--f-display);font-size:24px;letter-spacing:.02em}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:8px 14px;border-radius:8px;color:var(--muted);font-weight:500}
+.tab[aria-selected="true"]{background:var(--jade-soft);color:var(--jade)}
+.banner{margin-top:14px;padding:10px 14px;border-radius:8px;background:var(--warn-soft);color:var(--warn);font-size:13px}
+
+/* buttons & fields */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--jade)}
+.btn.primary{background:var(--jade);border-color:var(--jade);color:var(--surface)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:4px 10px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field input,.field select,input.in,select.in{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;width:100%}
+.field input:focus,.field select:focus,input.in:focus{border-color:var(--jade);outline:none}
+.grid-form{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 14px}
+.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:span 4}.span6{grid-column:span 6}
+@media (max-width:720px){.grid-form{grid-template-columns:repeat(2,minmax(0,1fr))}.span3,.span4,.span6{grid-column:span 2}}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{padding:7px 14px;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--jade-soft);color:var(--jade);font-weight:500}
+
+/* layout */
+main{padding-top:20px}
+.split{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.panel h2{font-size:17px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+
+/* course list */
+.clist{display:flex;flex-direction:column;gap:2px}
+.citem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:8px;width:100%}
+.citem:hover{background:var(--chip)}
+.citem[aria-current="true"]{background:var(--jade-soft)}
+.citem .t{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.citem .m{grid-column:1;font-size:12px;color:var(--muted)}
+.citem .n{grid-row:1/3;grid-column:2;align-self:center;text-align:right;font-size:12px;color:var(--muted)}
+.citem .n b{display:block;font-size:18px;color:var(--ink);font-family:var(--f-mono)}
+.group-h{font-size:12px;letter-spacing:.06em;color:var(--muted);padding:12px 12px 4px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;font-size:12px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.chip.open{background:var(--jade-soft);color:var(--jade)}
+.chip.open::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.brass{background:var(--brass-soft);color:var(--brass)}
+
+/* detail */
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 18px;margin:14px 0 4px}
+.dl div{min-width:0}
+.dl dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.dl dt{font-size:12px;color:var(--muted)}
+.tbl-wrap{overflow-x:auto;margin-top:12px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;font-weight:500;color:var(--muted);background:var(--chip)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.empty h3{color:var(--ink);font-size:16px;margin-bottom:6px}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--chip);border-radius:8px;padding:6px 6px 6px 12px;min-width:0}
+.linkbox code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--f-mono);font-size:12px}
+.stat-row{display:flex;gap:24px;flex-wrap:wrap;margin-top:6px}
+.stat b{font-family:var(--f-mono);font-size:26px;display:block;line-height:1.1}
+.stat span{font-size:12px;color:var(--muted)}
+
+/* roster cards */
+.sites{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.site{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface)}
+.site b{font-family:var(--f-mono);font-size:24px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:50;max-width:calc(100% - 32px)}
+
+/* projector */
+.proj{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:4vw;align-items:center;max-width:1400px;margin:0 auto;padding-block:4vh}
+@media (max-width:800px){.proj{grid-template-columns:minmax(0,1fr)}}
+.proj .site-name{color:var(--brass);letter-spacing:.12em;font-size:clamp(14px,1.4vw,20px)}
+.proj h1{font-family:var(--f-display);font-size:clamp(28px,3.6vw,56px);margin:8px 0 14px}
+.proj .when{font-size:clamp(15px,1.5vw,22px);color:var(--muted)}
+.proj .hint{margin-top:4vh;font-size:clamp(16px,1.7vw,26px)}
+.proj .count{margin-top:3vh;display:flex;align-items:baseline;gap:10px}
+.proj .count b{font-family:var(--f-mono);font-size:clamp(40px,5vw,80px);color:var(--jade);line-height:1}
+.recent{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;min-height:30px}
+.recent span{background:var(--jade-soft);color:var(--jade);border-radius:999px;padding:2px 12px;font-size:clamp(13px,1.1vw,17px);animation:pop .4s ease-out}
+@keyframes pop{from{transform:scale(.85);opacity:.3}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.recent span{animation:none}.bar i{transition:none}}
+.qrcard{background:#FFFFFF;border-radius:20px;padding:clamp(16px,2vw,32px);box-shadow:0 10px 40px rgba(10,30,30,.12);justify-self:center;width:min(100%,62vh)}
+.qrcard svg{display:block;width:100%;height:auto}
+.qrcard .bar{height:6px;background:#E3E9E7;border-radius:3px;margin-top:14px;overflow:hidden}
+.qrcard .bar i{display:block;height:100%;background:#0E6B5A;transition:width 1s linear}
+.qrcard .cap{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:#5D6D70}
+.exp-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;margin-top:12px;padding:16px 18px;border:2px dashed var(--jade);border-radius:12px;background:var(--jade-soft)}
+.exp-cta b{font-size:16px;color:var(--jade)}
+.exp-cta .btn{padding:10px 18px;font-size:15px}
+.qrcard .pin{display:flex;align-items:baseline;justify-content:center;gap:12px;margin-top:10px;color:#5D6D70;font-size:clamp(14px,1.3vw,18px)}
+.qrcard .pin b{color:#18272A;font-size:clamp(30px,3.4vw,52px);letter-spacing:.08em}
+.stu .pick{display:flex;flex-direction:column;gap:8px}
+.stu .pick button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px}
+.stu .pick button[aria-pressed="true"]{border-color:var(--jade);background:var(--jade-soft)}
+.stu .foot{text-align:center;margin-top:18px}
+.stu .foot button{border:0;background:none;color:var(--muted);text-decoration:underline;font-size:13px}
+.closed-card{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#5D6D70;gap:8px;padding:10%}
+.closed-card b{font-size:clamp(20px,2.4vw,34px);color:#18272A;font-family:var(--f-display)}
+.proj-tools{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;gap:6px;opacity:.35;transition:opacity .2s}
+.proj-tools:hover,.proj-tools:focus-within{opacity:1}
+
+/* student */
+.stu{max-width:440px;margin:0 auto;padding-block:28px}
+.stu .site-name{color:var(--brass);letter-spacing:.12em;font-size:13px}
+.stu h1{font-family:var(--f-display);font-size:24px;margin:4px 0 4px}
+.stu .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:20px}
+.stu .big-in{font-family:var(--f-mono);font-size:22px;letter-spacing:.08em;padding:12px 14px;text-transform:uppercase}
+.stu .btn{justify-content:center;padding:12px 16px;font-size:16px}
+.stu .who{font-size:26px;font-weight:700;margin:4px 0}
+.stu .done{text-align:center}
+.stu .done .mark{width:72px;height:72px;border-radius:50%;background:var(--jade-soft);color:var(--jade);display:grid;place-items:center;margin:0 auto 10px;font-size:38px}
+.stu .msg{padding:12px 14px;border-radius:10px;font-size:14px;margin-top:12px}
+.stu .msg.warn{background:var(--warn-soft);color:var(--warn)}
+.stu .msg.bad{background:var(--bad-soft);color:var(--bad)}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+.userbar{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;padding-top:12px;font-size:13px;color:var(--muted)}
+.userbar b{color:var(--ink)}
+a.btn{text-decoration:none;color:inherit}
+.qr-preview{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--chip)}
+.qr-preview img{width:180px;max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+.qr-preview .stack{flex:1;min-width:200px;gap:6px}
+a.btn.primary{color:var(--surface)}
+</style>
+</head>
+<body>
+<div id="app"><div class="stu"><div class="card">載入中…</div></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>/* qrcode-generator 1.4.4 (MIT, Kazuhiko Arase) — 內建，不需從外部載入 */
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ===== 設定：Apps Script 網址（部署後結尾是 /exec 的那串） ===== */
+const API_URL = "https://script.google.com/macros/s/AKfycbw9OHwJm_K181aC1dJghiAW5YrzNRWUkfbbm8iyYqpBoko8fNX4q1BOU6O5nPX7Vgbm/exec";
+
+const PARAMS = Object.fromEntries(new URLSearchParams(location.search));
+const BASE_URL = location.origin + location.pathname;
+const ADMIN_URL = BASE_URL + "?page=admin";
+
+/* ===== 小工具 ===== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const toInputDate = s => (s||"").replace(/\//g,"-");
+const fromInputDate = s => (s||"").replace(/-/g,"/");
+const minOf = t => { const [h,m] = String(t||"0:0").split(":").map(Number); return h*60+(m||0); };
+const addMin = (t,d) => { let v = Math.max(0, Math.min(1439, minOf(t)+d)); return `${pad(Math.floor(v/60))}:${pad(v%60)}`; };
+const normEmp = s => String(s ?? "").trim().toUpperCase().replace(/\s+/g,"");
+const creditOf = h => Math.floor((Number(h)||0)*2)/2;   // 每 30 分鐘 0.5 學分
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const rid = (n=8) => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => "abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");
+function lsGet(k){ try { return localStorage.getItem(k); } catch { return null; } }
+function lsSet(k,v){ try { localStorage.setItem(k,v); } catch {} }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,3000); }
+async function copyText(text){ try { await navigator.clipboard.writeText(text); toast("已複製"); } catch { toast("無法自動複製，請手動選取"); } }
+const errMsg = e => String((e && e.message) || e || "發生錯誤").replace(/^(Exception|Error):\s*/,"");
+const STATUS_CHIP = { upcoming:'<span class="chip">未開放</span>', open:'<span class="chip open">簽到中</span>', ended:'<span class="chip">已結束</span>' };
+const ROLES = { owner:"總管理者", hr:"系統管理員", company:"部門小幫手" };
+
+/* ===== 呼叫伺服器 ===== */
+async function api(fn, ...args){
+  if (!/^https?:\/\//.test(API_URL)) throw new Error("網頁還沒設定 Apps Script 網址，請洽系統管理員");
+  let r;
+  try {
+    r = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({fn, args}), redirect:"follow" });
+  } catch(e){ throw new Error("網路連線失敗，請確認網路後再試一次"); }
+  let j;
+  try { j = await r.json(); } catch(e){ throw new Error("伺服器暫時沒有回應，請稍後再試"); }
+  if (j && j.err !== undefined) throw new Error(j.err);
+  return j ? j.val : null;
+}
+/* 學員與投影頁連結一律指向這個網頁本身（而不是 Google 網址） */
+function localizeDetail(d){
+  if (!d) return d;
+  const pt = (()=>{ try { return new URL(d.projUrl).searchParams.get("pt"); } catch(e){ return ""; } })();
+  d.projUrl = `${BASE_URL}?page=proj&c=${d.course.id}&pt=${pt}`;
+  d.studentUrl = `${BASE_URL}?c=${d.course.id}&k=${d.code}`;
+  return d;
+}
+async function apiRetry(fn, ...args){
+  for (let i=0;i<3;i++){
+    try { return await api(fn, ...args); }
+    catch(e){ const m=errMsg(e); if (i<2 && /忙碌|NetworkError|網路|timed out|timeout|Service invoked too many/i.test(m)){ await sleep(700+Math.random()*1300); continue; } throw e; }
+  }
+}
+function downloadBlob(blob, filename){
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 10000);
+}
+const safeName = s => s.replace(/[\\/:*?"<>|]/g,"_");
+
+
+/* ================================================================
+   學員簽到
+   ================================================================ */
+function stuShell(c, inner){
+  $("#app").innerHTML=`<div class="stu">${c?`<div class="site-name">${esc(c.host)}｜教育訓練簽到</div><h1>${esc(c.name)}</h1>
+    <div class="small muted">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}　講師 ${esc(c.teacher)}</div>`:`<div class="site-name">漢來教育訓練簽到</div><h1>課程簽到</h1>`}
+    <div class="card">${inner}</div></div>`;
+}
+async function startLanding(){
+  let open;
+  try { open = await apiRetry("getLanding"); } catch(e){ return stuShell(null, `<div class="msg bad" style="margin:0">${esc(errMsg(e))}</div>`); }
+  if (!open.length) return stuShell(null, `<div class="msg warn" style="margin:0">目前沒有開放簽到的課程。請在上課時間再試一次，或洽人資同仁。</div>`);
+  let sel = open.length===1 ? open[0].id : null;
+  const draw = err => {
+    stuShell(null, `<form class="stack" id="land-form" autocomplete="off">
+      <div class="label">選擇課程</div>
+      <div class="pick">${open.map(c=>`<button type="button" data-pick="${c.id}" aria-pressed="${c.id===sel}"><b>${esc(c.name)}</b><div class="small muted">${esc(c.host)}｜${esc(c.start)}–${esc(c.end)}｜${esc(c.teacher)}</div></button>`).join("")}</div>
+      <label class="label" for="land-code" style="margin-top:6px">輸入教室裡的 6 位數簽到碼</label>
+      <input id="land-code" class="in big-in" inputmode="numeric" maxlength="7" required>
+      ${err?`<div class="msg bad" style="margin:0">${esc(err)}</div>`:""}
+      <button class="btn primary">下一步</button></form>`);
+    document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{ sel=b.dataset.pick; document.querySelectorAll("[data-pick]").forEach(x=>x.setAttribute("aria-pressed", x.dataset.pick===sel)); });
+    $("#land-form").onsubmit=e=>{ e.preventDefault();
+      const code=$("#land-code").value.replace(/\D/g,"");
+      if (!sel) return draw("請先選擇課程");
+      if (code.length!==6) return draw("簽到碼是 6 位數字");
+      startStudent(sel, code, err=>draw(err)); };
+  };
+  draw();
+}
+async function startStudent(cid, code, onBadCode){
+  let deviceId = lsGet("signin-device"); if (!deviceId){ deviceId=rid(10); lsSet("signin-device",deviceId); }
+  $("#app").innerHTML=`<div class="stu"><div class="card">載入中…</div></div>`;
+  let c;
+  try { c = await apiRetry("getStudentCourse", cid, code); }
+  catch(e){ if (onBadCode) return onBadCode(errMsg(e)); return stuShell(null, `<div class="msg bad" style="margin:0">${esc(errMsg(e))}</div>`); }
+  if (c.status==="upcoming") return stuShell(c, `<div class="msg warn" style="margin:0">簽到尚未開放，${esc(c.signFrom)} 開始。</div>`);
+  if (c.status==="ended") return stuShell(c, `<div class="msg warn" style="margin:0">簽到時間已過，如需補簽請洽人資同仁。</div>`);
+  showInput(lsGet("signin-emp")||"");
+
+  function showInput(val, err){
+    stuShell(c, `<form class="stack" id="stu-form" autocomplete="off">
+      <label class="label" for="stu-emp">請輸入你的工號</label>
+      <input id="stu-emp" class="in big-in" autocapitalize="characters" enterkeyhint="go" value="${esc(val)}" required>
+      ${err?`<div class="msg bad" style="margin:0">${esc(err)}</div>`:""}
+      <button class="btn primary">下一步</button></form>`);
+    $("#stu-form").onsubmit=async e=>{ e.preventDefault(); const emp=normEmp($("#stu-emp").value); if (!emp) return;
+      e.submitter && (e.submitter.disabled=true);
+      try { const p = await apiRetry("lookupEmp", cid, code, emp); confirmWho(p); }
+      catch(err){ showInput(emp, errMsg(err)); } };
+    if (!val) $("#stu-emp").focus();
+  }
+  function confirmWho(p){
+    if (p.signedAt) return done(p.name, p.signedAt, true);
+    const other = lsGet("signed:"+cid);
+    stuShell(c, `<div class="label">請確認是你本人</div><div class="who">${esc(p.name)}</div>
+      <div class="muted">${esc(p.site)}${p.dept?"｜"+esc(p.dept):""}｜<span class="mono">${esc(p.emp)}</span></div>
+      ${other&&other!==p.emp?`<div class="msg warn">這支手機已經幫其他工號簽到過，這筆紀錄會標記給人資確認。</div>`:""}
+      <div class="stack" style="margin-top:16px"><button class="btn primary" id="stu-ok">確認簽到</button><button class="btn" id="stu-back">不是我，重新輸入</button></div>`);
+    $("#stu-back").onclick=()=>showInput("");
+    $("#stu-ok").onclick=async ev=>{ ev.target.disabled=true; ev.target.textContent="簽到中…";
+      try { const r = await apiRetry("signIn", cid, code, p.emp, deviceId); lsSet("signin-emp",p.emp); lsSet("signed:"+cid,p.emp); done(r.name, r.at, r.already); }
+      catch(e){ stuShell(c, `<div class="msg bad" style="margin:0">簽到沒有成功：${esc(errMsg(e))}<br>請再掃一次 QR Code，或洽人資同仁。</div>`); } };
+  }
+  function done(name, at, already){
+    stuShell(c, `<div class="done"><div class="mark">✓</div><div class="who">${esc(name)}</div>
+      <div>${already?"你已經簽到過了":"簽到完成"}</div><div class="mono muted" style="margin-top:4px">${esc(String(at).slice(0,16))}</div>
+      <p class="small muted" style="margin-top:14px">可以關閉這個頁面了，祝上課愉快。</p></div>`);
+  }
+}
+
+/* ================================================================
+   教室投影頁
+   ================================================================ */
+function startProjector(cid, pt, onBack){
+  const app=$("#app");
+  app.innerHTML=`<div class="proj-tools"><button class="btn sm" id="pj-full">全螢幕</button>${onBack?`<button class="btn sm" id="pj-back">回後台</button>`:""}</div>
+    <div class="proj"><div><div class="site-name" id="pj-site"></div><h1 id="pj-name">載入中…</h1><div class="when" id="pj-when"></div>
+      <div class="hint">請用手機相機掃描右側 QR Code，輸入工號完成簽到<div class="small muted" style="margin-top:6px;font-size:clamp(13px,1.1vw,17px)">掃不到時：用手機開啟簽到頁，選擇本課程並輸入下方簽到碼</div></div>
+      <div class="count"><b id="pj-count">0</b><span class="muted">人已簽到<span id="pj-exp"></span></span></div><div class="recent" id="pj-recent"></div></div>
+      <div class="qrcard" id="pj-qr"></div></div>`;
+  $("#pj-full").onclick=()=>document.documentElement.requestFullscreen?.().catch(()=>toast("這個瀏覽器無法全螢幕，請按 F11"));
+  navigator.wakeLock?.request("screen").catch(()=>{});
+  let lastKey="";
+  async function tick(){
+    let d;
+    try { d = await api("getProjector", cid, pt); }
+    catch(e){ $("#pj-name").textContent=errMsg(e); return; }
+    const c=d.course;
+    $("#pj-site").textContent=c.host; $("#pj-name").textContent=c.name;
+    $("#pj-when").textContent=`${c.date}　${c.start}–${c.end}　講師 ${c.teacher}`;
+    $("#pj-count").textContent=d.count; $("#pj-exp").textContent=d.expected?`／應到 ${d.expected} 人`:"";
+    $("#pj-recent").innerHTML=d.recent.map(n=>`<span>${esc(String(n).replace("（示範）",""))}</span>`).join("");
+    const key=c.status+d.code;
+    if (key!==lastKey){ lastKey=key; const box=$("#pj-qr");
+      if (c.status!=="open"){ box.innerHTML=`<div class="closed-card"><b>${c.status==="upcoming"?"簽到尚未開放":"簽到已結束"}</b><span>${c.status==="upcoming"?`${esc(c.signFrom)} 開放簽到`:"如需補簽請洽人資"}</span></div>`; }
+      else { const qr=qrcode(0,"M"); qr.addData(BASE_URL+"?c="+cid+"&k="+d.code); qr.make();
+        box.innerHTML=qr.createSvgTag({cellSize:8,margin:2,scalable:true})+`<div class="pin"><span>簽到碼</span><b class="mono">${d.code.replace(/(\d{3})(\d{3})/,"$1 $2")}</b></div>`; }
+    }
+  }
+  tick(); const timer=setInterval(tick, 6000);
+  if (onBack) $("#pj-back").onclick=()=>{ clearInterval(timer); document.exitFullscreen?.().catch(()=>{}); onBack(); };
+}
+
+/* ================================================================
+   管理後台
+   ================================================================ */
+const S = { token:null, user:null, data:null, tab:"courses", selected:null, detail:null, editing:null, expEdit:false,
+  rosterSum:null, rosterView:null, rosterRows:null, rosterQ:"", rosterPreview:null,
+  exportSel:new Set(), exportInit:false, exportSite:"全部", exportFrom:"", exportTo:"",
+  admins:null, adminEdit:null, tempPw:null, log:null, hasAdmins:true, dirty:false };
+const isHr = () => S.user && (S.user.role==="owner"||S.user.role==="hr");
+const isOwner = () => S.user?.role==="owner";
+
+async function call(fn, ...args){
+  try { return await api(fn, S.token, ...args); }
+  catch(e){
+    const m=errMsg(e);
+    if (m.startsWith("AUTH:")){ S.token=null; S.user=null; lsSet("hl-token",""); toast(m.slice(5)); renderAdmin(); throw new Error("__auth"); }
+    throw new Error(m);
+  }
+}
+async function act(btn, fn){
+  if (btn) btn.disabled=true;
+  try { return await fn(); }
+  catch(e){ if (e.message!=="__auth") toast(e.message); }
+  finally { if (btn && btn.isConnected) btn.disabled=false; }
+}
+
+async function startAdmin(){
+  S.token = lsGet("hl-token") || null;
+  if (S.token){ try { await refresh(); } catch(e){} }
+  if (!S.token){ try { S.hasAdmins = await api("hasAdmins"); } catch(e){ S.hasAdmins=true; } }
+  renderAdmin();
+  setInterval(async ()=>{ if (S.projecting || !S.token || S.user?.mustChange || document.hidden) return; if (S.tab!=="courses" || S.editing) return;
+    try { await refresh(true); softRender(); } catch(e){} }, 15000);
+}
+async function refresh(withDetail){
+  S.data = await call("getAdminData"); S.user = S.data.user;
+  if (!S.exportFrom){ const t=S.data.today; S.exportFrom=t.slice(0,8)+"01"; S.exportTo=t; }
+  if (withDetail!==false && S.selected) await loadDetail(S.selected).catch(()=>{});
+}
+async function loadDetail(cid){ S.detail = localizeDetail(await call("getCourseDetail", cid)); }
+function softRender(){
+  const a=document.activeElement;
+  if (a && a.matches("input,select,textarea") && a.closest("form[data-form]") && !a.closest("form[data-form=manual],form[data-form=export-filter]")){ S.dirty=true; return; }
+  S.dirty=false; renderAdmin();
+}
+document.addEventListener("focusout", ()=>{ if (S.dirty) setTimeout(()=>{ if (S.dirty) softRender(); },0); });
+
+function renderAdmin(){
+  if (S.projecting) return;
+  const app=$("#app"); const keep=window.scrollY;
+  const draftEl=$("#exp-text"), draft=draftEl?.value;
+  if (!S.token || !S.user || S.user.mustChange){ app.innerHTML=viewAuth(); $("#app input")?.focus(); return; }
+  const tabs=[["courses","課程與簽到"], ...(isHr()?[["roster","在職名單"]]:[]), ["export","匯出"], ...(isOwner()?[["accounts","帳號管理"]]:[]), ...(isHr()?[["log","操作紀錄"]]:[]), ["me","我的帳號"]];
+  if (!tabs.some(([k])=>k===S.tab)) S.tab="courses";
+  const u=S.user;
+  app.innerHTML=`<div class="wrap">
+    <div class="userbar"><span><b>${esc(u.name)}</b>（${esc(u.account)}）｜${esc(u.roleName)}${u.role==="company"?"："+esc(u.companies.join("、")):""}</span><button class="btn sm" data-act="logout">登出</button></div>
+    <header class="top">
+      <div class="brand"><h1>教育訓練簽到</h1><p>開課 → 教室投影 QR → 學員手機簽到 → 匯出人資系統匯入檔</p></div>
+      <nav class="tabs" role="tablist">${tabs.map(([k,v])=>`<button class="tab" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${v}</button>`).join("")}</nav>
+    </header>
+    <main>${S.tab==="courses"?viewCourses(): S.tab==="roster"?viewRoster(): S.tab==="export"?viewExport(): S.tab==="accounts"?viewAccounts(): S.tab==="log"?viewLog(): viewMe()}</main>
+  </div>`;
+  const ne=$("#exp-text"); if (ne && draft!=null) ne.value=draft;
+  const qi=$("#qr-preview"); if (qi && S.detail) qi.src=qrPreviewUrl(S.detail);
+  window.scrollTo(0,keep);
+}
+
+/* ---------- 登入 ---------- */
+function authShell(title, sub, body){ return `<div class="stu" style="max-width:420px"><div class="site-name">漢來教育訓練簽到｜管理後台</div><h1>${title}</h1><div class="small muted">${sub}</div><div class="card">${body}</div></div>`; }
+function chpwForm(){ return `<form class="stack" data-form="chpw" autocomplete="off">
+    <label class="label" for="cp-old">目前密碼</label><input id="cp-old" name="old" type="password" class="in" required>
+    <label class="label" for="cp-pw">新密碼（至少 8 個字元）</label><input id="cp-pw" name="pw" type="password" class="in" required>
+    <label class="label" for="cp-pw2">再輸入一次新密碼</label><input id="cp-pw2" name="pw2" type="password" class="in" required>
+    <button class="btn primary">更新密碼</button></form>`; }
+function viewAuth(){
+  if (!S.hasAdmins) return authShell("建立總管理者", "系統還沒有任何管理員。第一個建立的帳號會成為總管理者，可以指定其他人的權限。",
+    `<form class="stack" data-form="setup" autocomplete="off">
+      <label class="label" for="su-acc">帳號（建議用工號）</label><input id="su-acc" name="account" class="in mono" required>
+      <label class="label" for="su-name">姓名</label><input id="su-name" name="name" class="in" required>
+      <label class="label" for="su-pw">密碼（至少 8 個字元）</label><input id="su-pw" name="pw" type="password" class="in" required>
+      <label class="label" for="su-pw2">再輸入一次密碼</label><input id="su-pw2" name="pw2" type="password" class="in" required>
+      <button class="btn primary">建立並登入</button></form>`);
+  if (S.user?.mustChange) return authShell("請設定新密碼", `${esc(S.user.name)}，你目前使用的是臨時密碼，請先設定自己的密碼。`, chpwForm());
+  return authShell("管理員登入", "學員簽到不需要登入，請直接掃描教室裡的 QR Code。",
+    `<form class="stack" data-form="login" autocomplete="off">
+      <label class="label" for="li-acc">帳號</label><input id="li-acc" name="account" class="in mono" required>
+      <label class="label" for="li-pw">密碼</label><input id="li-pw" name="pw" type="password" class="in" required>
+      <button class="btn primary">登入</button></form>`);
+}
+function viewMe(){
+  const u=S.user;
+  return `<div class="split"><section class="panel"><h2>我的帳號</h2>
+    <dl class="dl"><div><dt>帳號</dt><dd class="mono">${esc(u.account)}</dd></div><div><dt>姓名</dt><dd>${esc(u.name)}</dd></div>
+      <div><dt>角色</dt><dd>${esc(u.roleName)}</dd></div><div><dt>可管理的公司</dt><dd>${esc(u.companies.join("、"))}</dd></div></dl></section>
+    <section class="panel"><h2 style="margin-bottom:12px">修改密碼</h2>${chpwForm()}</section></div>`;
+}
+
+/* ---------- 課程 ---------- */
+const courseSites = c => [c.host, ...(c.sites||[])].filter((v,i,a)=>v && a.indexOf(v)===i);
+function viewCourses(){
+  if (S.editing) return viewCourseForm();
+  const cs=S.data.courses.slice().sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start));
+  if (!cs.length) return `<div class="panel"><div class="empty">
+      <h3>${isHr()?"還沒有任何課程":"你管理的公司目前沒有課程"}</h3><p>先建立一堂課，系統會產生該堂課的簽到 QR Code。${isHr()?"<br>想先看看流程，可以載入示範資料（台北漢來 8 位示範學員＋今天一堂課）。":""}</p>
+      <div class="row" style="justify-content:center;margin-top:12px"><button class="btn primary" data-act="new-course">建立課程</button>
+      ${isHr()?`<button class="btn" data-act="seed-demo">載入示範資料</button>`:""}</div></div></div>`;
+  if (!S.selected || !cs.find(c=>c.id===S.selected)){ S.selected=(cs.find(c=>c.status==="open")||cs[0]).id; S.detail=null; loadDetail(S.selected).then(renderAdmin).catch(()=>{}); }
+  const groups={open:[],upcoming:[],ended:[]}; cs.forEach(c=>groups[c.status].push(c)); groups.upcoming.reverse();
+  const item=c=>`<button class="citem" data-sel="${c.id}" aria-current="${c.id===S.selected}">
+      <span class="t">${esc(c.name)}</span>
+      <span class="m">${esc(c.date)} ${esc(c.start)}｜${esc(c.host)}${c.sites.length?" 等 "+courseSites(c).length+" 家":""}${c.exportedAt?"｜已匯出":""}</span>
+      <span class="n"><b>${c.count}${c.expected?`<small style="font-size:12px;color:var(--muted)">/${c.expected}</small>`:""}</b>人</span></button>`;
+  const grp=(k,l)=>groups[k].length?`<div class="group-h">${l}</div>${groups[k].map(item).join("")}`:"";
+  return `<div class="split">
+    <section class="panel" style="padding:10px">
+      <div class="panel-head" style="padding:6px 6px 0"><h2>課程</h2><button class="btn primary sm" data-act="new-course">＋ 建立課程</button></div>
+      <div class="clist">${grp("open","簽到中")}${grp("upcoming","即將開始")}${grp("ended","已結束")}</div>
+    </section>
+    ${S.detail && S.detail.course.id===S.selected ? viewCourseDetail() : `<section class="panel"><div class="empty small">載入中…</div></section>`}
+  </div>`;
+}
+function flagsFor(s, c, list, expSet){
+  const f=[]; const late = s.at.slice(0,10)===c.date ? minOf(s.at.slice(11,16))-minOf(c.start) : 0;
+  if (late>0) f.push(`<span class="chip warn">遲到 ${late} 分</span>`);
+  if (s.site && !courseSites(c).includes(s.site)) f.push(`<span class="chip brass">跨館</span>`);
+  if (s.method==="manual") f.push(`<span class="chip">補登${s.by?"："+esc(s.by):""}</span>`);
+  if (expSet.size && !expSet.has(s.emp)) f.push(`<span class="chip brass">名單外</span>`);
+  if (s.deviceId && list.filter(x=>x.deviceId===s.deviceId).length>1) f.push(`<span class="chip bad">同裝置多人</span>`);
+  return {html:f.join(" "), late:Math.max(0,late)};
+}
+function viewCourseDetail(){
+  const d=S.detail, c=d.course, list=d.signins, can=d.canEdit;
+  const expSet=new Set(d.expected.map(x=>x.emp)); const signed=new Set(list.map(s=>s.emp));
+  const missing=d.expected.filter(x=>!signed.has(x.emp));
+  const lateN=list.filter(s=>flagsFor(s,c,list,expSet).late>0).length;
+  const rows=list.map((s,i)=>`<tr><td class="num muted">${i+1}</td><td class="mono">${esc(s.emp)}</td><td>${esc(s.name)}</td><td>${esc(s.dept)}</td><td>${esc(s.site)}</td>
+      <td class="mono">${esc(s.at.slice(11,16))}</td><td>${flagsFor(s,c,list,expSet).html}</td>
+      <td>${can?`<button class="btn sm danger" data-del-signin="${esc(s.emp)}">移除</button>`:""}</td></tr>`).join("");
+  return `<section class="panel">
+    <div class="panel-head">
+      <div><div class="row">${STATUS_CHIP[c.status]}${c.exportedAt?'<span class="chip brass">已匯出</span>':""}<span class="label">主辦：${esc(c.host)}${c.sites.length?"｜參訓："+esc(c.sites.join("、")):""}</span></div>
+      <h2 style="font-size:20px;margin-top:6px">${esc(c.name)}</h2></div>
+      ${can?`<div class="row"><button class="btn" data-act="edit-course">編輯</button><button class="btn danger" data-act="del-course">刪除課程</button></div>`:`<span class="chip">參訓公司：可查看與補登</span>`}
+    </div>
+    <dl class="dl">
+      <div><dt>訓練日期</dt><dd class="mono">${esc(c.date)}</dd></div>
+      <div><dt>上課時間</dt><dd class="mono">${esc(c.start)}–${esc(c.end)}</dd></div>
+      <div><dt>簽到開放</dt><dd class="mono">${esc(c.signFrom)}–${esc(c.signTo)}</dd></div>
+      <div><dt>訓練項目</dt><dd>${esc(c.itemCode)} ${esc((S.data.items.find(i=>i[0]===c.itemCode)||[])[1]||"")}</dd></div>
+      <div><dt>內外訓</dt><dd>${c.inOuter==="1"?"外訓":"內訓"}</dd></div>
+      <div><dt>講師</dt><dd>${esc(c.teacher)}</dd></div>
+      <div><dt>時數／學分</dt><dd class="mono">${esc(c.hours)} 小時／${esc(c.credit)}</dd></div>
+      <div><dt>簽到碼</dt><dd class="mono">${esc(d.code)}</dd></div>
+    </dl>
+    <div class="stat-row">${d.expected.length?`<div class="stat"><b>${d.expected.length}</b><span>應到</span></div>`:""}
+      <div class="stat"><b>${list.length}</b><span>已簽到</span></div>
+      ${d.expected.length?`<div class="stat"><b style="color:var(--bad)">${missing.length}</b><span>未到</span></div><div class="stat"><b>${list.filter(s=>!expSet.has(s.emp)).length}</b><span>名單外</span></div>`:""}
+      <div class="stat"><b>${lateN}</b><span>遲到</span></div></div>
+    <div class="stack" style="margin-top:16px">
+      <div class="label">教室投影頁（在教室電腦開這個連結，投到螢幕上，不需要登入）</div>
+      <div class="linkbox"><code>${esc(d.projUrl)}</code>
+        <button class="btn sm" data-copy="${esc(d.projUrl)}">複製連結</button>
+        <button class="btn sm primary" data-act="proj-here">開啟投影畫面</button></div>
+      <div class="small muted">在這台電腦按「開啟投影畫面」，或把連結傳到教室電腦打開都可以，不需要登入。</div>
+      <div class="row">
+        <button class="btn sm" data-act="download-qr">下載 QR Code 圖檔</button>
+        ${can?`${c.status!=="open"?`<button class="btn sm" data-override="open">立即開放簽到</button>`:`<button class="btn sm" data-override="closed">結束簽到</button>`}${c.override?`<button class="btn sm" data-override="">恢復依時段開放</button>`:""}`:""}
+        <span class="small muted">${c.override?"目前為手動控制":"依簽到開放時段自動開關"}</span>
+      </div>
+    </div>
+    <div class="qr-preview">
+      <img id="qr-preview" alt="簽到 QR Code 圖卡" src="">
+      <div class="stack small">
+        <b style="font-size:15px">簽到 QR Code 圖卡</b>
+        <span class="muted">可以列印張貼在教室門口或桌上，學員掃描後輸入工號即可簽到。QR Code 只在簽到時段內有效。</span>
+        <span class="muted">按「下載 QR Code 圖檔」沒有反應時：在圖片上按右鍵 →「另存圖片」，或直接拖曳到桌面。</span>
+        <span>簽到碼 <b class="mono" style="font-size:18px">${esc(d.code)}</b></span>
+      </div>
+    </div>
+    ${viewExpected(d, missing, can)}
+    <div class="panel-head" style="margin-top:22px;margin-bottom:0"><h2>簽到名單</h2>
+      <div class="row">
+        <button class="btn sm" data-act="export-one-detail" ${list.length?"":"disabled"}>匯出簽到明細</button>
+        ${isHr()?`<button class="btn sm primary" data-act="export-one-import" ${list.length?"":"disabled"}>匯出人資系統匯入檔</button>`:""}</div>
+      <form class="row" data-form="manual" autocomplete="off">
+        <input class="in mono" id="manual-emp" name="emp" placeholder="輸入工號補登" style="width:150px">
+        <button class="btn sm">補登簽到</button></form></div>
+    ${list.length?`<div class="tbl-wrap"><table><thead><tr><th class="num">#</th><th>工號</th><th>姓名</th><th>部門</th><th>公司別</th><th>簽到</th><th>註記</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+      :`<div class="empty small">還沒有人簽到。開放時段內，學員掃投影頁上的 QR Code 就會出現在這裡。</div>`}
+  </section>`;
+}
+function viewExpected(d, missing, can){
+  const exp=d.expected;
+  const head=`<div class="panel-head" style="margin-top:22px;margin-bottom:0"><h2>上課名單${exp.length?`（未到 ${missing.length} 人）`:""}</h2>
+    <div class="row">${S.expEdit||!can?"":exp.length?`<button class="btn sm" data-act="exp-edit">修改名單</button><button class="btn sm danger" data-act="exp-clear">清除名單</button>`:""}</div></div>`;
+  if (S.expEdit) return head+`<form data-form="expected" class="stack" style="margin-top:12px" autocomplete="off">
+      <textarea id="exp-text" class="in" rows="6" style="font-family:var(--f-mono)" placeholder="貼上工號：一行一個，或用逗號、空白分隔。可以直接從 Excel 複製整欄工號貼上。">${esc(exp.map(x=>x.emp).join("\n"))}</textarea>
+      <div class="row"><span class="small muted">或上傳檔案（需有「工號」欄位）</span><input type="file" id="exp-file" accept=".xlsx,.xls,.csv" class="in" style="max-width:300px"></div>
+      <div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-act="exp-cancel">取消</button><button class="btn primary">儲存上課名單</button></div></form>`;
+  if (!exp.length && !can) return head+`<p class="small muted" style="margin:8px 0 0">主辦公司尚未上傳上課名單。</p>`;
+  if (!exp.length) return head+`<div class="exp-cta"><div><b>還沒有上課名單</b><div class="small muted">上傳這堂課應到的學員工號，就能即時看到誰還沒簽到。沒上傳也可以正常簽到。</div></div>
+      <button class="btn primary" data-act="exp-edit">＋ 上傳上課名單</button></div>`;
+  if (!missing.length) return head+`<div class="empty small">應到的 ${exp.length} 人都已簽到。</div>`;
+  return head+`<div class="tbl-wrap"><table><thead><tr><th>未到</th><th>工號</th><th>姓名</th><th>部門</th><th>公司別</th><th></th></tr></thead><tbody>
+    ${missing.map((x,i)=>`<tr><td class="num muted">${i+1}</td><td class="mono">${esc(x.emp)}</td><td>${x.name?esc(x.name):'<span class="chip warn">在職名單查無</span>'}</td><td>${esc(x.dept)}</td><td>${esc(x.site)}</td>
+      <td>${x.name?`<button class="btn sm" data-manual-emp="${esc(x.emp)}">補登簽到</button>`:""}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function viewCourseForm(){
+  const c=S.editing; const opt=(v,l,cur)=>`<option value="${esc(v)}" ${v===cur?"selected":""}>${esc(l)}</option>`;
+  return `<section class="panel"><div class="panel-head"><h2>${c.id?"編輯課程":"建立課程"}</h2></div>
+    <form data-form="course" class="grid-form" autocomplete="off">
+      <div class="field span2"><label class="label" for="f-host">主辦公司</label><select id="f-host" name="host">${S.user.companies.map(s=>opt(s,s,c.host)).join("")}</select></div>
+      <div class="field span4"><label class="label" for="f-name">訓練名稱</label><input id="f-name" name="name" required value="${esc(c.name)}" placeholder="例：2026 下半年消防安全講習"></div>
+      <div class="field span3"><label class="label" for="f-item">訓練項目</label><select id="f-item" name="itemCode">${S.data.items.map(([k,v])=>opt(k,`${k}　${v}`,c.itemCode)).join("")}</select></div>
+      <div class="field span1"><span class="label">內外訓</span><div class="seg"><label><input type="radio" name="inOuter" value="0" ${c.inOuter!=="1"?"checked":""}>內訓</label><label><input type="radio" name="inOuter" value="1" ${c.inOuter==="1"?"checked":""}>外訓</label></div></div>
+      <div class="field span2"><label class="label" for="f-teacher">講師</label><input id="f-teacher" name="teacher" required value="${esc(c.teacher)}"></div>
+      <div class="field span2"><label class="label" for="f-date">訓練日期</label><input id="f-date" type="date" name="date" required value="${esc(toInputDate(c.date))}"></div>
+      <div class="field span1"><label class="label" for="f-start">開始</label><input id="f-start" type="time" name="start" required value="${esc(c.start)}"></div>
+      <div class="field span1"><label class="label" for="f-end">結束</label><input id="f-end" type="time" name="end" required value="${esc(c.end)}"></div>
+      <div class="field span1"><label class="label" for="f-hours">時數</label><input id="f-hours" type="number" name="hours" min="0" step="0.5" required value="${esc(c.hours)}"></div>
+      <div class="field span1"><label class="label" for="f-credit">學分</label><input id="f-credit" type="number" name="credit" min="0" step="0.5" value="${esc(c.credit)}"></div>
+      <div class="field span1"><label class="label" for="f-sf">簽到開放</label><input id="f-sf" type="time" name="signFrom" required value="${esc(c.signFrom)}"></div>
+      <div class="field span1"><label class="label" for="f-st">簽到截止</label><input id="f-st" type="time" name="signTo" required value="${esc(c.signTo)}"></div>
+      <div class="field span6"><span class="label">參訓公司（跨公司的課請勾選，被勾選公司的管理員也看得到這堂課）</span>
+        <div class="row" style="gap:6px 16px">${S.data.sites.map(s=>`<label class="small" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="sites" value="${esc(s)}" ${(c.sites||[]).includes(s)?"checked":""}>${esc(s)}</label>`).join("")}</div></div>
+      <p class="span6 small muted" style="margin:0">時數會依開始、結束時間自動計算（以 0.5 小時為單位），學分再依時數自動帶入（每 30 分鐘 0.5 學分）；兩者都可以手動修改，例如扣除午休或不計學分的課改成 0。匯入檔以此處的時數與學分為準。簽到時段預設為開課前 30 分鐘到開課後 30 分鐘，開課時間之後簽到會標記遲到。</p>
+      <div class="span6 row" style="justify-content:flex-end"><button type="button" class="btn" data-act="cancel-edit">取消</button><button class="btn primary">${c.id?"儲存變更":"建立課程"}</button></div>
+    </form></section>`;
+}
+
+/* ---------- 在職名單 ---------- */
+function viewRoster(){
+  if (!S.rosterSum){ call("rosterSummary").then(r=>{ S.rosterSum=r; renderAdmin(); }).catch(e=>toast(e.message)); return `<div class="panel"><div class="empty small">載入中…</div></div>`; }
+  const cards=S.data.sites.map(s=>{ const r=S.rosterSum[s]||{count:0}; return `<div class="site"><div class="label">${esc(s)}</div><b>${r.count}</b> <span class="small muted">人</span>
+      <div class="small muted">${r.updatedAt?"更新於 "+esc(r.updatedAt):"尚未匯入"}</div>
+      ${r.count?`<div class="row" style="margin-top:8px"><button class="btn sm" data-view-roster="${esc(s)}">${S.rosterView===s?"收合名單":"檢視名單"}</button><button class="btn sm danger" data-clear-roster="${esc(s)}">清除整份</button></div>`:""}</div>`; }).join("");
+  const vr=S.rosterView && S.rosterRows;
+  const viewer = S.rosterView ? `<div class="panel" style="margin-top:16px">
+      <div class="panel-head"><h2>${esc(S.rosterView)} 在職名單${vr?`（符合 ${vr.total} 人）`:""}</h2>
+        <form class="row" data-form="roster-q"><input class="in" id="roster-q" name="q" placeholder="搜尋工號、姓名、部門" value="${esc(S.rosterQ)}" style="max-width:220px"><button class="btn sm">搜尋</button></form></div>
+      ${vr?`<div class="tbl-wrap"><table><thead><tr><th>工號</th><th>姓名</th><th>部門</th><th></th></tr></thead><tbody>
+        ${vr.rows.map(r=>`<tr><td class="mono">${esc(r.emp)}</td><td>${esc(r.name)}</td><td>${esc(r.dept)}</td><td><button class="btn sm danger" data-del-emp="${esc(r.emp)}">刪除</button></td></tr>`).join("")||`<tr><td colspan="4" class="muted">沒有符合的人員</td></tr>`}
+      </tbody></table></div>${vr.total>300?`<p class="small muted">只顯示前 300 筆，請用搜尋縮小範圍。</p>`:""}`:`<div class="empty small">載入中…</div>`}</div>` : "";
+  const p=S.rosterPreview;
+  const preview = p ? `<div class="panel" style="margin-top:16px"><div class="panel-head"><h2>確認匯入：${esc(p.fileName)}</h2></div>
+      <p class="small">${Object.entries(p.bySite).map(([s,l])=>`${esc(s)} <b class="mono">${l.length}</b> 人`).join("　")} ${p.skipped?`<span class="chip warn">略過 ${p.skipped} 列（缺工號、姓名或公司別）</span>`:""}</p>
+      <p class="small muted">匯入後會「整份取代」上列公司別的現有名單，其他公司別不受影響。</p>
+      <div class="tbl-wrap"><table><thead><tr><th>工號</th><th>姓名</th><th>部門</th><th>公司別</th></tr></thead><tbody>
+        ${p.sample.map(r=>`<tr><td class="mono">${esc(r.emp)}</td><td>${esc(r.n)}</td><td>${esc(r.d)}</td><td>${esc(r.site)}</td></tr>`).join("")}</tbody></table></div>
+      <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" data-act="cancel-roster">取消</button><button class="btn primary" data-act="commit-roster">確認匯入</button></div></div>` : "";
+  return `<section class="panel">
+      <div class="panel-head"><h2>在職名單</h2><button class="btn sm" data-act="seed-demo">載入示範資料（台北漢來 8 人＋一堂課）</button></div>
+      <p class="small muted" style="margin-top:-6px">學員輸入工號時，系統用這份名單帶出姓名讓本人確認。建議每月從人資系統匯出一次在職名單更新。</p>
+      <div class="sites">${cards}</div>
+      <div class="stack" style="margin-top:18px"><div class="label">上傳名單（.xlsx 或 .csv）</div>
+        <div class="row"><input type="file" id="roster-file" accept=".xlsx,.xls,.csv" class="in" style="max-width:320px">
+          <select id="roster-site" class="in" style="width:auto"><option value="">依檔案中的「公司別」欄位</option>${S.data.sites.map(s=>`<option>${esc(s)}</option>`).join("")}</select>
+          <button class="btn" data-act="parse-roster">讀取檔案</button></div>
+        <p class="small muted" style="margin:0">需要的欄位：工號（或員工工號）、姓名，可加部門、公司別。第一列為標題列。檔案沒有公司別欄位時，請在右側選擇整份名單屬於哪個公司別。</p></div>
+      <div class="stack" style="margin-top:18px"><div class="label">查詢工號</div>
+        <form class="row" data-form="lookup" autocomplete="off"><input class="in mono" name="emp" style="width:160px" placeholder="工號"><button class="btn">查詢</button><span id="lookup-out" class="small"></span></form></div>
+    </section>${viewer}${preview}`;
+}
+function readFile(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsArrayBuffer(file); }); }
+function matchSite(v){
+  v=String(v||"").trim(); if (!v) return "";
+  if (S.data.sites.includes(v)) return v;
+  if (/總公司/.test(v)) return "總公司";
+  if (/物業|公寓|管理顧問/.test(v)) return "漢來物業";
+  if (/南投|日月/.test(v)) return "漢來日月行館";
+  if (/台北|臺北/.test(v)) return "台北漢來";
+  if (/高雄/.test(v) || v==="漢來國際飯店股份有限公司") return "高雄漢來";
+  return "";
+}
+async function parseRoster(){
+  const file=$("#roster-file").files[0]; if (!file) return toast("請先選擇檔案");
+  const fixedSite=$("#roster-site").value; let rows;
+  try { const wb=XLSX.read(await readFile(file),{type:"array"}); rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""}); }
+  catch { return toast("檔案讀不出來，請確認是 xlsx 或 csv"); }
+  const hi=rows.findIndex(r=>r.some(v=>/工號|員編|員工編號/.test(v))); if (hi<0) return toast("找不到「工號」欄位，請確認標題列");
+  const H=rows[hi].map(v=>String(v).trim()); const col=re=>H.findIndex(h=>re.test(h));
+  const ci={emp:col(/工號|員編|員工編號/), n:col(/姓名/), d:col(/部門|單位/), site:col(/公司|館別|據點/)};
+  if (ci.n<0) return toast("找不到「姓名」欄位");
+  if (!fixedSite && ci.site<0) return toast("檔案沒有公司別欄位，請在右側選擇公司別");
+  const bySite={}; let skipped=0; const sample=[];
+  for (const r of rows.slice(hi+1)){
+    const emp=normEmp(r[ci.emp]), n=String(r[ci.n]||"").trim(), d=ci.d>=0?String(r[ci.d]||"").trim():"";
+    const site=fixedSite||matchSite(r[ci.site]);
+    if (!emp && !n) continue; if (!emp||!n||!site){ skipped++; continue; }
+    (bySite[site] ||= []).push({emp,n,d,site}); if (sample.length<8) sample.push({emp,n,d,site});
+  }
+  if (!Object.keys(bySite).length) return toast("沒有讀到可匯入的資料");
+  S.rosterPreview={fileName:file.name, bySite, skipped, sample}; renderAdmin();
+}
+
+/* ---------- 匯出 ---------- */
+function exportList(){
+  return S.data.courses.filter(c=>(S.exportSite==="全部"||courseSites(c).includes(S.exportSite)) && c.date>=S.exportFrom && c.date<=S.exportTo)
+    .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+}
+function viewExport(){
+  const list=exportList();
+  if (!S.exportInit && S.data.courses.length){ S.exportInit=true; list.forEach(c=>{ if (!c.exportedAt && c.count) S.exportSel.add(c.id); }); }
+  const sel=list.filter(c=>S.exportSel.has(c.id)); const total=sel.reduce((n,c)=>n+c.count,0);
+  return `<section class="panel"><div class="panel-head"><h2>${isHr()?"匯出人資系統匯入檔":"匯出簽到明細"}</h2></div>
+    <form class="row" data-form="export-filter" style="gap:12px">
+      <div class="field"><label class="label" for="ex-site">公司別</label><select id="ex-site" name="site" class="in">${["全部",...S.user.companies].map(s=>`<option ${s===S.exportSite?"selected":""}>${esc(s)}</option>`).join("")}</select></div>
+      <div class="field"><label class="label" for="ex-from">訓練日期 起</label><input id="ex-from" type="date" name="from" class="in" value="${toInputDate(S.exportFrom)}"></div>
+      <div class="field"><label class="label" for="ex-to">迄</label><input id="ex-to" type="date" name="to" class="in" value="${toInputDate(S.exportTo)}"></div></form>
+    ${list.length?`<div class="tbl-wrap"><table><thead><tr><th><input type="checkbox" id="ex-all" aria-label="全選" ${sel.length===list.length?"checked":""}></th><th>訓練日期</th><th>主辦公司</th><th>訓練名稱</th><th>訓練項目</th><th class="num">時數</th><th class="num">人數</th><th>狀態</th></tr></thead><tbody>
+      ${list.map(c=>`<tr><td><input type="checkbox" data-exsel="${c.id}" ${S.exportSel.has(c.id)?"checked":""} aria-label="選取 ${esc(c.name)}"></td><td class="mono">${esc(c.date)}</td><td>${esc(c.host)}</td><td>${esc(c.name)}</td><td class="mono">${esc(c.itemCode)}</td><td class="num">${esc(c.hours)}</td><td class="num">${c.count}</td>
+        <td>${STATUS_CHIP[c.status]} ${c.exportedAt?`<span class="chip brass">已匯出 ${esc(c.exportedAt.slice(5,10))}</span>`:""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty small">這個條件下沒有課程。</div>`}
+    <div class="row" style="justify-content:space-between;margin-top:14px">
+      <span class="small">${sel.length?"":'<span class="chip warn">請先勾選要匯出的課程</span> '}已選 <b>${sel.length}</b> 堂課，共 <b class="mono">${total}</b> 筆簽到紀錄</span>
+      <div class="row"><button class="btn" data-act="export-detail" ${sel.length?"":"disabled"}>匯出簽到明細（內部留存）</button>
+        ${isHr()?`<button class="btn primary" data-act="export-import" ${total?"":"disabled"}>匯出人資系統匯入檔</button>`:""}</div></div>
+    <p class="small muted">${isHr()?"匯入檔格式：工作表 HUM0020100（自訂序號、員工工號）＋ Link.HUM0021000（訓練名稱、訓練項目代碼、內外訓、講師、訓練日期 yyyymmdd、時數、學分），序號從 1 起依日期、課程、工號排序。被「移除」的簽到不會匯出。":"簽到明細含簽到時間、遲到、補登與註記；有上課名單的課程另附「未到名單」工作表。"}</p>
+  </section>`;
+}
+const rangeTag = () => `${S.exportFrom.replace(/\//g,"")}-${S.exportTo.replace(/\//g,"")}`;
+async function doExportImport(btn, ids, tag){
+  await act(btn, async()=>{
+    const r=await call("exportImport", ids);
+    const s1=[["人員基本資料檔"],["USERNO","SYS_VIEWID"],["自訂序號","員工工號"],["欄位說明"], ...r.s1];
+    const s2=[["教育訓練設定"],["USERNO","TRAINNAME","TMP_TRAINITEMID","INOUTER","TEACHERNAME","TRAINDATE","HOURS","CREDIT"],["自訂序號","訓練名稱","訓練項目","內外訓","講師","訓練日期","時數","學分"],["欄位說明","","","0:內訓\r\n1:外訓"], ...r.s2];
+    const wb=XLSX.utils.book_new(); const w1=XLSX.utils.aoa_to_sheet(s1), w2=XLSX.utils.aoa_to_sheet(s2);
+    for (const w of [w1,w2]) for (const k of Object.keys(w)) if (k[0]!=="!" && w[k].t==="s") w[k].z="@";
+    w1["!cols"]=[{wch:10},{wch:14}]; w2["!cols"]=[{wch:10},{wch:30},{wch:16},{wch:10},{wch:12},{wch:12},{wch:8},{wch:8}];
+    XLSX.utils.book_append_sheet(wb,w1,"HUM0020100"); XLSX.utils.book_append_sheet(wb,w2,"Link.HUM0021000");
+    downloadBlob(new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]), safeName(`教育訓練匯入檔_${tag}.xlsx`));
+    toast(`已匯出 ${r.count} 筆`); await refresh(); renderAdmin();
+  });
+}
+async function doExportDetail(btn, ids, tag){
+  await act(btn, async()=>{
+    const r=await call("exportDetail", ids);
+    const wb=XLSX.utils.book_new();
+    const head=["主辦公司","訓練名稱","訓練項目","訓練日期","上課時間","工號","姓名","員工所屬公司別","部門","簽到時間","遲到(分)","方式","註記"];
+    const ws=XLSX.utils.aoa_to_sheet([head,...r.detail]); ws["!cols"]=[10,28,10,12,12,12,10,14,12,20,8,14,14].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb,ws,"簽到明細");
+    if (r.hasExpected){ const wm=XLSX.utils.aoa_to_sheet([["主辦公司","訓練名稱","訓練日期","工號","姓名","部門","員工所屬公司別"],...r.missing]); wm["!cols"]=[10,28,12,12,14,12,14].map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb,wm,"未到名單"); }
+    downloadBlob(new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]), safeName(`教育訓練簽到明細_${tag}.xlsx`));
+  });
+}
+
+/* ---------- 帳號管理 ---------- */
+function viewAccounts(){
+  if (!S.admins){ call("listAdmins").then(r=>{ S.admins=r; renderAdmin(); }).catch(e=>toast(e.message)); return `<div class="panel"><div class="empty small">載入中…</div></div>`; }
+  const order={owner:0,hr:1,company:2};
+  const list=[...S.admins].sort((a,b)=>(order[a.role]-order[b.role])||a.account.localeCompare(b.account));
+  const d=S.adminEdit;
+  const form = d ? `<section class="panel" style="margin-bottom:16px"><div class="panel-head"><h2>${d.isNew?"新增管理員":"編輯管理員："+esc(d.account)}</h2></div>
+    <form data-form="admin" class="grid-form" autocomplete="off">
+      <div class="field span2"><label class="label" for="ad-acc">帳號（工號）</label><input id="ad-acc" name="account" class="mono" value="${esc(d.account)}" ${d.isNew?"required":"disabled"}></div>
+      <div class="field span2"><label class="label" for="ad-name">姓名</label><input id="ad-name" name="name" value="${esc(d.name)}" required></div>
+      <div class="field span2"><label class="label" for="ad-role">角色</label><select id="ad-role" name="role">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${d.role===k?"selected":""}>${v}</option>`).join("")}</select></div>
+      <div class="field span6" id="ad-comp-wrap" ${d.role==="company"?"":"hidden"}><span class="label">可管理的公司（部門小幫手才需要）</span>
+        <div class="row" style="gap:6px 16px">${S.data.sites.map(s=>`<label class="small" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="companies" value="${esc(s)}" ${d.companies.includes(s)?"checked":""}>${esc(s)}</label>`).join("")}</div></div>
+      ${d.isNew?"":`<div class="field span2"><label class="label" for="ad-active">狀態</label><select id="ad-active" name="active"><option value="1" ${d.active?"selected":""}>啟用</option><option value="0" ${d.active?"":"selected"}>停用</option></select></div>`}
+      <p class="span6 small muted" style="margin:0">${d.isNew?"建立後系統會產生一組臨時密碼，請交給本人，本人第一次登入時要改成自己的密碼。":"停用後該帳號就無法登入，帳號與操作紀錄都會保留，之後可以再啟用。離職或調職建議用停用；建錯或測試用的帳號再用列表上的「刪除」。"}</p>
+      <div class="span6 row" style="justify-content:flex-end"><button type="button" class="btn" data-act="cancel-admin">取消</button><button class="btn primary">${d.isNew?"建立帳號":"儲存"}</button></div>
+    </form></section>` : "";
+  const temp = S.tempPw ? `<div class="panel" style="margin-bottom:16px;border-color:var(--jade)">
+    <div class="panel-head"><h2>臨時密碼：${esc(S.tempPw.name)}（${esc(S.tempPw.account)}）</h2><button class="btn sm" data-act="close-temp">我已抄下，關閉</button></div>
+    <div class="linkbox"><code style="font-size:18px">${esc(S.tempPw.pw)}</code><button class="btn sm" data-copy="${esc(S.tempPw.pw)}">複製</button></div>
+    <p class="small muted" style="margin-bottom:0">這組密碼只會顯示這一次，請連同後台網址交給本人：<span class="mono">${esc(ADMIN_URL)}</span></p></div>` : "";
+  return `${temp}${form}<section class="panel">
+    <div class="panel-head"><h2>管理員帳號</h2>${d?"":`<button class="btn primary sm" data-act="new-admin">＋ 新增管理員</button>`}</div>
+    <p class="small muted" style="margin-top:-6px">總管理者：指定所有人的權限，並擁有系統管理員的全部功能。系統管理員（HR）：管理所有公司、上傳在職名單、匯出人資系統匯入檔。部門小幫手：只能管理指定公司的課程，跨公司的課只要有勾選他的公司，他也看得到。</p>
+    <div class="linkbox" style="margin-bottom:12px"><span class="small muted">後台網址</span><code>${esc(ADMIN_URL)}</code><button class="btn sm" data-copy="${esc(ADMIN_URL)}">複製</button></div>
+
+    <div class="tbl-wrap"><table><thead><tr><th>帳號</th><th>姓名</th><th>角色</th><th>可管理的公司</th><th>狀態</th><th>最後登入</th><th></th></tr></thead><tbody>
+      ${list.map(a=>`<tr><td class="mono">${esc(a.account)}</td><td>${esc(a.name)}</td><td>${a.role==="owner"?'<span class="chip brass">總管理者</span>':a.role==="hr"?'<span class="chip open" style="padding-left:8px">系統管理員</span>':'<span class="chip">部門小幫手</span>'}</td>
+        <td>${a.role==="company"?esc(a.companies.join("、")):'<span class="muted">全部</span>'}</td>
+        <td>${!a.active?'<span class="chip bad">停用</span>':a.mustChange?'<span class="chip warn">尚未改密碼</span>':'<span class="chip">啟用</span>'}</td>
+        <td class="mono small">${esc(a.lastLogin?a.lastLogin.slice(0,16):"—")}</td>
+        <td><div class="row"><button class="btn sm" data-edit-admin="${esc(a.account)}">編輯</button>${a.account!==S.user.account?`<button class="btn sm" data-reset-pw="${esc(a.account)}">重設密碼</button><button class="btn sm danger" data-del-admin="${esc(a.account)}">刪除</button>`:""}</div></td></tr>`).join("")}
+    </tbody></table></div></section>`;
+}
+
+/* ---------- 操作紀錄 ---------- */
+function viewLog(){
+  if (!S.log){ call("getLog", 300).then(r=>{ S.log=r; renderAdmin(); }).catch(e=>toast(e.message)); return `<div class="panel"><div class="empty small">載入中…</div></div>`; }
+  return `<section class="panel"><div class="panel-head"><h2>操作紀錄</h2><div class="row"><span class="small muted">最近 300 筆</span><button class="btn sm" data-act="reload-log">重新整理</button></div></div>
+    ${S.log.length?`<div class="tbl-wrap"><table><thead><tr><th>時間</th><th>帳號</th><th>姓名</th><th>動作</th><th>內容</th></tr></thead><tbody>
+      ${S.log.map(r=>`<tr><td class="mono small">${esc(r[0].slice(0,16))}</td><td class="mono">${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td><td style="white-space:normal;min-width:240px">${esc(r[4])}</td></tr>`).join("")}
+    </tbody></table></div>`:`<div class="empty small">還沒有操作紀錄。</div>`}</section>`;
+}
+
+/* ---------- QR Code 圖檔 ---------- */
+function qrCardCanvas(d){
+  const c=d.course;
+  {
+    const qr=qrcode(0,"M"); qr.addData(d.studentUrl); qr.make();
+    const W=1200, H=1780, cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+    const g=cv.getContext("2d"), sans='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif', serif='"Noto Serif TC","Songti TC",serif';
+    g.fillStyle="#FFFFFF"; g.fillRect(0,0,W,H); g.strokeStyle="#DCE3E1"; g.lineWidth=4; g.strokeRect(30,30,W-60,H-60);
+    g.textAlign="center"; g.fillStyle="#9A7631"; g.font=`500 38px ${sans}`; g.fillText(`${c.host}｜教育訓練簽到`, W/2, 130);
+    g.fillStyle="#18272A"; g.font=`700 64px ${serif}`;
+    const lines=[]; let cur=""; for (const ch of c.name){ if (g.measureText(cur+ch).width>1020){ lines.push(cur); cur=ch; } else cur+=ch; } if (cur) lines.push(cur);
+    let y=225; lines.slice(0,2).forEach(l=>{ g.fillText(l,W/2,y); y+=82; });
+    g.fillStyle="#5D6D70"; g.font=`400 34px ${sans}`; g.fillText(`${c.date}　${c.start}–${c.end}　講師 ${c.teacher}`, W/2, y+8);
+    const n=qr.getModuleCount(), cell=Math.floor(860/n), size=cell*n, qx=(W-size)/2, qy=y+70;
+    g.fillStyle="#000000"; for (let r=0;r<n;r++) for (let k=0;k<n;k++) if (qr.isDark(r,k)) g.fillRect(qx+k*cell, qy+r*cell, cell, cell);
+    const by=qy+size+90;
+    g.fillStyle="#5D6D70"; g.font=`400 36px ${sans}`; g.fillText("簽到碼", W/2, by);
+    g.fillStyle="#18272A"; g.font=`600 110px "IBM Plex Mono",Menlo,Consolas,monospace`; g.fillText(d.code.replace(/(\d{3})(\d{3})/,"$1 $2"), W/2, by+120);
+    g.fillStyle="#0E6B5A"; g.font=`500 40px ${sans}`; g.fillText("用手機相機掃描 QR Code，輸入工號完成簽到", W/2, by+215);
+    g.fillStyle="#5D6D70"; g.font=`400 32px ${sans}`; g.fillText(`簽到時段 ${c.signFrom}–${c.signTo}`, W/2, by+275);
+    return cv;
+  }
+}
+function qrPreviewUrl(d){
+  const key=[d.course.id,d.code,d.course.name,d.course.date,d.course.start,d.course.end,d.course.signFrom,d.course.signTo,d.course.teacher].join("|");
+  S.qrCache ||= {};
+  if (!S.qrCache[key]){ try { S.qrCache[key]=qrCardCanvas(d).toDataURL("image/png"); } catch(e){ return ""; } }
+  return S.qrCache[key];
+}
+async function downloadQr(btn){
+  const d=S.detail, c=d.course;
+  await act(btn, async()=>{
+    try { await document.fonts.ready; } catch {}
+    const cv=qrCardCanvas(d);
+    const blob=await new Promise(res=>cv.toBlob(res,"image/png"));
+    downloadBlob(blob, safeName(`簽到QR_${c.host}_${c.date.replace(/\//g,"")}_${c.name.slice(0,20)}.png`));
+    toast("如果沒有開始下載，請在下方 QR Code 圖片上按右鍵 →「另存圖片」");
+  });
+}
+
+/* ---------- 事件 ---------- */
+function armThen(btn, fn){
+  if (btn.classList.contains("armed")){ btn.classList.remove("armed"); fn(); return; }
+  const old=btn.textContent; btn.classList.add("armed"); btn.textContent="再按一次確認";
+  setTimeout(()=>{ if (btn.isConnected && btn.classList.contains("armed")){ btn.classList.remove("armed"); btn.textContent=old; } },3000);
+}
+document.addEventListener("click", async e=>{
+  if (PARAMS.page!=="admin") return;
+  const t=e.target.closest("button,input[type=checkbox]"); if (!t || !$("#app").contains(t)) return;
+  const D=t.dataset;
+  if (D.tab){ S.tab=D.tab; S.editing=null; if (D.tab==="log") S.log=null; if (D.tab==="accounts") S.admins=null; if (D.tab==="roster") S.rosterSum=null; return renderAdmin(); }
+  if (D.sel){ S.selected=D.sel; S.expEdit=false; S.detail=null; renderAdmin(); return act(null, async()=>{ await loadDetail(D.sel); renderAdmin(); }); }
+  if (D.copy) return copyText(D.copy);
+  if (D.override!==undefined) return act(t, async()=>{ await call("setOverride", S.selected, D.override); await refresh(); renderAdmin(); toast("已更新"); });
+  if (D.delSignin) return armThen(t, ()=>act(t, async()=>{ await call("removeSignin", S.selected, D.delSignin); await refresh(); renderAdmin(); toast("已移除"); }));
+  if (D.manualEmp) return act(t, async()=>{ const n=await call("manualSign", S.selected, D.manualEmp); await refresh(); renderAdmin(); toast(`已補登 ${n}`); });
+  if (D.viewRoster){ if (S.rosterView===D.viewRoster){ S.rosterView=null; return renderAdmin(); } S.rosterView=D.viewRoster; S.rosterQ=""; S.rosterRows=null; renderAdmin();
+    return act(null, async()=>{ S.rosterRows=await call("viewRoster", S.rosterView, ""); renderAdmin(); }); }
+  if (D.clearRoster) return armThen(t, ()=>act(t, async()=>{ await call("clearRoster", D.clearRoster); if (S.rosterView===D.clearRoster) S.rosterView=null; S.rosterSum=await call("rosterSummary"); renderAdmin(); toast("已清除"); }));
+  if (D.delEmp) return armThen(t, ()=>act(t, async()=>{ await call("deleteRosterEmp", D.delEmp); S.rosterRows=await call("viewRoster", S.rosterView, S.rosterQ); S.rosterSum=await call("rosterSummary"); renderAdmin(); toast(`已刪除 ${D.delEmp}`); }));
+  if (D.exsel){ t.checked?S.exportSel.add(D.exsel):S.exportSel.delete(D.exsel); return renderAdmin(); }
+  if (t.id==="ex-all"){ exportList().forEach(c=> t.checked?S.exportSel.add(c.id):S.exportSel.delete(c.id)); return renderAdmin(); }
+  if (D.editAdmin){ const a=S.admins.find(x=>x.account===D.editAdmin); S.adminEdit={...a, companies:[...a.companies]}; S.tempPw=null; return renderAdmin(); }
+  if (D.resetPw) return armThen(t, ()=>act(t, async()=>{ const pw=await call("resetPassword", D.resetPw); const a=S.admins.find(x=>x.account===D.resetPw); S.tempPw={account:D.resetPw, name:a.name, pw}; S.admins=await call("listAdmins"); renderAdmin(); }));
+  if (D.delAdmin) return armThen(t, ()=>act(t, async()=>{ await call("deleteAdmin", D.delAdmin); S.admins=await call("listAdmins"); if (S.adminEdit?.account===D.delAdmin) S.adminEdit=null; renderAdmin(); toast("已刪除"); }));
+  const a=D.act; if (!a) return;
+  if (a==="logout"){ api("logout", S.token).catch(()=>{}); S.token=null; S.user=null; lsSet("hl-token",""); S.tab="courses"; S.selected=null; S.detail=null; return renderAdmin(); }
+  if (a==="new-course"){ const s="09:00"; const cs=S.user.companies; S.editing={host:cs.includes("台北漢來")?"台北漢來":cs[0], sites:[], name:"", itemCode:"T002", inOuter:"0", teacher:"", date:S.data.today, start:s, end:"11:00", hours:2, credit:2, signFrom:addMin(s,-30), signTo:addMin(s,30)}; return renderAdmin(); }
+  if (a==="edit-course"){ const c=S.detail.course; S.editing={...c, sites:[...c.sites]}; return renderAdmin(); }
+  if (a==="cancel-edit"){ S.editing=null; return renderAdmin(); }
+  if (a==="del-course") return armThen(t, ()=>act(t, async()=>{ await call("deleteCourse", S.selected); S.selected=null; S.detail=null; await refresh(false); renderAdmin(); toast("課程已刪除"); }));
+  if (a==="exp-edit"){ S.expEdit=true; renderAdmin(); $("#exp-text")?.focus(); return; }
+  if (a==="exp-cancel"){ S.expEdit=false; return renderAdmin(); }
+  if (a==="exp-clear") return armThen(t, ()=>act(t, async()=>{ await call("setExpected", S.selected, []); await refresh(); renderAdmin(); toast("已清除上課名單"); }));
+  if (a==="download-qr") return downloadQr(t);
+  if (a==="proj-here"){ const d=S.detail; const pt=new URL(d.projUrl).searchParams.get("pt"); S.projecting=true; window.scrollTo(0,0);
+    return startProjector(d.course.id, pt, async()=>{ S.projecting=false; renderAdmin(); try { await refresh(); renderAdmin(); } catch(e){} }); }
+  if (a==="seed-demo") return act(t, async()=>{ const id=await call("seedDemo"); S.selected=id; S.rosterSum=null; S.tab="courses"; await refresh(); renderAdmin(); toast("已載入示範資料：工號 E10021～E10088"); });
+  if (a==="parse-roster") return parseRoster();
+  if (a==="cancel-roster"){ S.rosterPreview=null; return renderAdmin(); }
+  if (a==="commit-roster") return act(t, async()=>{ const by={}; Object.entries(S.rosterPreview.bySite).forEach(([s,l])=>by[s]=l.map(r=>({emp:r.emp,n:r.n,d:r.d})));
+    const n=await call("uploadRoster", by); S.rosterPreview=null; S.rosterSum=await call("rosterSummary"); renderAdmin(); toast(`名單已更新，共 ${n} 人`); });
+  if (a==="export-import") return doExportImport(t, exportList().filter(c=>S.exportSel.has(c.id)).map(c=>c.id), `${S.exportSite}_${rangeTag()}`);
+  if (a==="export-detail") return doExportDetail(t, exportList().filter(c=>S.exportSel.has(c.id)).map(c=>c.id), rangeTag());
+  if (a==="export-one-import"){ const c=S.detail.course; return doExportImport(t, [c.id], `${c.host}_${c.date.replace(/\//g,"")}_${c.name.slice(0,20)}`); }
+  if (a==="export-one-detail"){ const c=S.detail.course; return doExportDetail(t, [c.id], `${c.date.replace(/\//g,"")}_${c.name.slice(0,20)}`); }
+  if (a==="new-admin"){ S.adminEdit={isNew:true, account:"", name:"", role:"company", companies:[], active:true}; S.tempPw=null; return renderAdmin(); }
+  if (a==="cancel-admin"){ S.adminEdit=null; return renderAdmin(); }
+  if (a==="close-temp"){ S.tempPw=null; return renderAdmin(); }
+  if (a==="reload-log"){ S.log=null; return renderAdmin(); }
+});
+document.addEventListener("input", e=>{
+  const f=e.target.closest("form[data-form=course]"); if (!f) return;
+  if (e.target.name==="start"){ f.signFrom.value=addMin(e.target.value,-30); f.signTo.value=addMin(e.target.value,30); }
+  if ((e.target.name==="start"||e.target.name==="end") && f.start.value && f.end.value){ const d=minOf(f.end.value)-minOf(f.start.value); if (d>0){ f.hours.value=Math.round(d/30)/2; f.credit.value=creditOf(f.hours.value); } }
+  if (e.target.name==="hours") f.credit.value=creditOf(e.target.value);
+});
+document.addEventListener("change", e=>{
+  if (e.target.id==="ad-role"){ const w=$("#ad-comp-wrap"); if (w) w.hidden=e.target.value!=="company"; return; }
+  const f=e.target.closest("form[data-form=export-filter]"); if (!f) return;
+  S.exportSite=f.site.value; S.exportFrom=fromInputDate(f.from.value); S.exportTo=fromInputDate(f.to.value); renderAdmin();
+});
+document.addEventListener("submit", async e=>{
+  if (PARAMS.page!=="admin") return;
+  const f=e.target.closest("form[data-form]"); if (!f) return; e.preventDefault();
+  const btn=f.querySelector("button:not([type=button])"); const kind=f.dataset.form;
+  const fd=new FormData(f); const v=Object.fromEntries(fd);
+  if (kind==="setup") return act(btn, async()=>{
+    if (v.pw!==v.pw2) throw new Error("兩次輸入的密碼不一樣");
+    const r=await api("createOwner", v.account, v.name, v.pw).catch(err=>{ throw new Error(errMsg(err)); });
+    S.token=r.token; lsSet("hl-token", r.token); await refresh(); renderAdmin(); toast("總管理者已建立"); });
+  if (kind==="login") return act(btn, async()=>{
+    const r=await api("login", v.account, v.pw).catch(err=>{ throw new Error(errMsg(err)); });
+    S.token=r.token; lsSet("hl-token", r.token); S.user=r.user; await refresh(); renderAdmin(); });
+  if (kind==="chpw") return act(btn, async()=>{
+    if (v.pw!==v.pw2) throw new Error("兩次輸入的新密碼不一樣");
+    S.user=await call("changePassword", v.old, v.pw); await refresh(); renderAdmin(); toast("密碼已更新"); });
+  if (kind==="course") return act(btn, async()=>{
+    if (minOf(v.signTo)<minOf(v.signFrom)) throw new Error("簽到截止時間要晚於開放時間");
+    const d={ id:S.editing.id||"", host:v.host, sites:fd.getAll("sites").filter(x=>x!==v.host), name:v.name, itemCode:v.itemCode, inOuter:v.inOuter, teacher:v.teacher,
+      date:fromInputDate(v.date), start:v.start, end:v.end, hours:v.hours, credit:v.credit||0, signFrom:v.signFrom, signTo:v.signTo };
+    const id=await call("saveCourse", d); S.selected=id; S.editing=null; S.detail=null; await refresh(); renderAdmin(); toast(d.id?"已儲存":"課程已建立"); });
+  if (kind==="manual") return act(btn, async()=>{ const emp=normEmp(v.emp); if (!emp) return; const n=await call("manualSign", S.selected, emp); await refresh(); renderAdmin(); toast(`已補登 ${n}`); });
+  if (kind==="expected") return act(btn, async()=>{
+    let tokens=$("#exp-text").value.split(/[\s,，、;；]+/);
+    const file=$("#exp-file").files[0];
+    if (file){ const wb=XLSX.read(await readFile(file),{type:"array"}); const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""});
+      const hi=rows.findIndex(r=>r.some(x=>/工號|員編|員工編號/.test(x))); const ci=hi>=0?rows[hi].findIndex(x=>/工號|員編|員工編號/.test(x)):0;
+      tokens=tokens.concat(rows.slice(hi+1).map(r=>r[ci])); }
+    const r=await call("setExpected", S.selected, tokens.map(normEmp).filter(Boolean));
+    S.expEdit=false; await refresh(); renderAdmin(); toast(`上課名單已儲存 ${r.count} 人${r.unknown?`，其中 ${r.unknown} 個工號在職名單查無`:""}`); });
+  if (kind==="lookup") return act(btn, async()=>{ const p=await call("lookupRoster", v.emp); $("#lookup-out").textContent=p?`${p.name}｜${p.site}${p.dept?"｜"+p.dept:""}`:"查無此工號"; });
+  if (kind==="roster-q") return act(btn, async()=>{ S.rosterQ=v.q; S.rosterRows=await call("viewRoster", S.rosterView, v.q); renderAdmin(); });
+  if (kind==="admin") return act(btn, async()=>{
+    const d=S.adminEdit;
+    const r=await call("saveAdmin", { isNew:!!d.isNew, account:d.isNew?v.account:d.account, name:v.name, role:v.role, companies:fd.getAll("companies"), active:v.active!=="0" });
+    S.adminEdit=null; S.admins=await call("listAdmins");
+    if (r.tempPassword) S.tempPw={account:r.account, name:v.name, pw:r.tempPassword}; else toast("已儲存");
+    renderAdmin(); });
+});
+
+/* ===== 路由（放在最後，確保上面的設定都已載入） ===== */
+if (PARAMS.page==="admin") startAdmin();
+else if (PARAMS.page==="proj") startProjector(PARAMS.c, PARAMS.pt);
+else if (PARAMS.c && PARAMS.k) startStudent(PARAMS.c, PARAMS.k);
+else startLanding();
+</script>
+
+</body>
+</html>
