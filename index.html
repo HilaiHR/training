@@ -63,7 +63,8 @@ button{cursor:pointer}
 .grid-form{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 14px}
 .span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:span 4}.span6{grid-column:span 6}
 @media (max-width:720px){.grid-form{grid-template-columns:repeat(2,minmax(0,1fr))}.span3,.span4,.span6{grid-column:span 2}}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative;align-self:flex-start}
+.field input[type=checkbox],.field input[type=radio]{width:auto}
 .seg label{padding:7px 14px;cursor:pointer}
 .seg input{position:absolute;opacity:0;pointer-events:none}
 .seg label:has(input:checked){background:var(--jade-soft);color:var(--jade);font-weight:500}
@@ -169,6 +170,19 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .stu .msg.warn{background:var(--warn-soft);color:var(--warn)}
 .stu .msg.bad{background:var(--bad-soft);color:var(--bad)}
 .stack{display:flex;flex-direction:column;gap:12px}
+.stu .info{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:13px;color:var(--muted)}
+.stu .info b{color:var(--ink);font-weight:500}
+.stu .done .mark.wait{background:var(--brass-soft);color:var(--brass);font-size:26px;font-weight:700}
+.stu .done .status{font-size:20px;font-weight:700;margin-top:2px}
+.stu .ticket{border-top:1px dashed var(--line);margin:16px 0 0;padding-top:12px;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:14px}
+.stu .ticket dt{color:var(--muted)}
+.stu .ticket dd{margin:0;overflow-wrap:anywhere}
+.stu .foot a{color:var(--muted);font-size:13px}
+.stu .shot{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--jade-soft);color:var(--jade);font-size:14px;text-align:center}
+.reg-qr{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--chip)}
+.reg-qr .svgbox{width:132px;background:#fff;border-radius:8px;padding:6px;border:1px solid var(--line)}
+.reg-qr .svgbox svg{display:block;width:100%;height:auto}
+.reg-qr .stack{flex:1;min-width:220px;gap:8px}
 
 .userbar{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;padding-top:12px;font-size:13px;color:var(--muted)}
 .userbar b{color:var(--ink)}
@@ -2491,6 +2505,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbw9OHwJm_K181aC1dJghiAW
 const PARAMS = Object.fromEntries(new URLSearchParams(location.search));
 const BASE_URL = location.origin + location.pathname;
 const ADMIN_URL = BASE_URL + "?page=admin";
+const REG_URL = BASE_URL + "?page=reg";
 
 /* ===== 小工具 ===== */
 const $ = s => document.querySelector(s);
@@ -2502,6 +2517,7 @@ const minOf = t => { const [h,m] = String(t||"0:0").split(":").map(Number); retu
 const addMin = (t,d) => { let v = Math.max(0, Math.min(1439, minOf(t)+d)); return `${pad(Math.floor(v/60))}:${pad(v%60)}`; };
 const normEmp = s => String(s ?? "").trim().toUpperCase().replace(/\s+/g,"");
 const creditOf = h => Math.floor((Number(h)||0)*2)/2;   // 每 30 分鐘 0.5 學分
+const prevDay = d => { const [y,m,dd]=String(d).split("/").map(Number); const t=new Date(Date.UTC(y,m-1,dd-1)); return `${t.getUTCFullYear()}/${pad(t.getUTCMonth()+1)}/${pad(t.getUTCDate())}`; };
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const rid = (n=8) => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => "abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");
 function lsGet(k){ try { return localStorage.getItem(k); } catch { return null; } }
@@ -2530,6 +2546,7 @@ function localizeDetail(d){
   const pt = (()=>{ try { return new URL(d.projUrl).searchParams.get("pt"); } catch(e){ return ""; } })();
   d.projUrl = `${BASE_URL}?page=proj&c=${d.course.id}&pt=${pt}`;
   d.studentUrl = `${BASE_URL}?c=${d.course.id}&k=${d.code}`;
+  d.regUrl = `${REG_URL}&c=${d.course.id}`;
   return d;
 }
 async function apiRetry(fn, ...args){
@@ -2549,15 +2566,16 @@ const safeName = s => s.replace(/[\\/:*?"<>|]/g,"_");
 /* ================================================================
    學員簽到
    ================================================================ */
-function stuShell(c, inner){
+function stuShell(c, inner, foot){
   $("#app").innerHTML=`<div class="stu">${c?`<div class="site-name">${esc(c.host)}｜教育訓練簽到</div><h1>${esc(c.name)}</h1>
     <div class="small muted">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}　講師 ${esc(c.teacher)}</div>`:`<div class="site-name">漢來教育訓練簽到</div><h1>課程簽到</h1>`}
-    <div class="card">${inner}</div></div>`;
+    <div class="card">${inner}</div>${foot?`<div class="foot">${foot}</div>`:""}</div>`;
 }
+const REG_FOOT = `<a href="${REG_URL}">要報名課程？前往報名專區</a>`;
 async function startLanding(){
   let open;
   try { open = await apiRetry("getLanding"); } catch(e){ return stuShell(null, `<div class="msg bad" style="margin:0">${esc(errMsg(e))}</div>`); }
-  if (!open.length) return stuShell(null, `<div class="msg warn" style="margin:0">目前沒有開放簽到的課程。請在上課時間再試一次，或洽人資同仁。</div>`);
+  if (!open.length) return stuShell(null, `<div class="msg warn" style="margin:0">目前沒有開放簽到的課程。請在上課時間再試一次，或洽人資同仁。</div>`, REG_FOOT);
   let sel = open.length===1 ? open[0].id : null;
   const draw = err => {
     stuShell(null, `<form class="stack" id="land-form" autocomplete="off">
@@ -2566,7 +2584,7 @@ async function startLanding(){
       <label class="label" for="land-code" style="margin-top:6px">輸入教室裡的 6 位數簽到碼</label>
       <input id="land-code" class="in big-in" inputmode="numeric" maxlength="7" required>
       ${err?`<div class="msg bad" style="margin:0">${esc(err)}</div>`:""}
-      <button class="btn primary">下一步</button></form>`);
+      <button class="btn primary">下一步</button></form>`, REG_FOOT);
     document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{ sel=b.dataset.pick; document.querySelectorAll("[data-pick]").forEach(x=>x.setAttribute("aria-pressed", x.dataset.pick===sel)); });
     $("#land-form").onsubmit=e=>{ e.preventDefault();
       const code=$("#land-code").value.replace(/\D/g,"");
@@ -2614,6 +2632,87 @@ async function startStudent(cid, code, onBadCode){
     stuShell(c, `<div class="done"><div class="mark">✓</div><div class="who">${esc(name)}</div>
       <div>${already?"你已經簽到過了":"簽到完成"}</div><div class="mono muted" style="margin-top:4px">${esc(String(at).slice(0,16))}</div>
       <p class="small muted" style="margin-top:14px">可以關閉這個頁面了，祝上課愉快。</p></div>`);
+  }
+}
+
+/* ================================================================
+   學員報名
+   ================================================================ */
+const fmtDL = s => s ? String(s).slice(5).replace(" ", "　") : "";
+function seatText(c){
+  if (!c.capacity) return `不限名額，已報名 ${c.regCount} 人`;
+  const left = c.capacity - c.regCount;
+  return left>0 ? `名額 ${c.capacity} 人，剩 ${left} 個名額` : `名額 ${c.capacity} 人已額滿${c.waitCount?`，候補 ${c.waitCount} 人`:""}，可報名候補`;
+}
+function regShell(c, inner, foot){
+  $("#app").innerHTML=`<div class="stu">${c?`<div class="site-name">${esc(c.host)}｜教育訓練報名</div><h1>${esc(c.name)}</h1>
+    <div class="small muted">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}　講師 ${esc(c.teacher)}</div>`:`<div class="site-name">漢來教育訓練</div><h1>課程報名</h1>`}
+    <div class="card">${inner}</div>${foot?`<div class="foot">${foot}</div>`:""}</div>`;
+}
+const LIST_FOOT = `<a href="${REG_URL}">查看其他可報名的課程</a>`;
+async function startRegList(){
+  regShell(null, "載入中…");
+  let list;
+  try { list = await apiRetry("getRegList"); } catch(e){ return regShell(null, `<div class="msg bad" style="margin:0">${esc(errMsg(e))}</div>`); }
+  if (!list.length) return regShell(null, `<div class="msg warn" style="margin:0">目前沒有開放報名的課程。</div>`);
+  regShell(null, `<div class="stack"><div class="label">選擇要報名的課程</div><div class="pick">${list.map(c=>`<button type="button" data-reg="${esc(c.id)}">
+      <b>${esc(c.name)}</b><div class="small muted">${esc(c.host)}${c.sites.length>1?"等 "+c.sites.length+" 家":""}｜${esc(c.date)} ${esc(c.start)}–${esc(c.end)}</div>
+      <div class="small" style="margin-top:2px">${esc(seatText(c))}<span class="muted">｜截止 ${esc(fmtDL(c.regDeadline))}</span></div></button>`).join("")}</div></div>`);
+  document.querySelectorAll("[data-reg]").forEach(b=>b.onclick=()=>{ location.href=`${REG_URL}&c=${encodeURIComponent(b.dataset.reg)}`; });
+}
+async function startReg(cid){
+  regShell(null, "載入中…");
+  let c;
+  try { c = await apiRetry("getRegCourse", cid); } catch(e){ return regShell(null, `<div class="msg bad" style="margin:0">${esc(errMsg(e))}</div>`, LIST_FOOT); }
+  const infoBox = () => `<div class="info" style="margin:0 0 14px"><span>${esc(seatText(c))}</span><span>報名截止 <b class="mono">${esc(c.regDeadline)}</b></span>
+    <span>開放對象 <b>${esc(c.sites.join("、"))}</b></span></div>`;
+  showInput(lsGet("signin-emp")||"");
+
+  function showInput(val, err){
+    const closed = c.regState!=="open";
+    regShell(c, `${infoBox()}${closed?`<div class="msg warn" style="margin:0 0 12px">報名已截止。輸入工號可以查詢你的報名結果。</div>`:""}
+      <form class="stack" id="reg-form" autocomplete="off">
+      <label class="label" for="reg-emp">請輸入你的工號</label>
+      <input id="reg-emp" class="in big-in" autocapitalize="characters" enterkeyhint="go" value="${esc(val)}" required>
+      ${err?`<div class="msg bad" style="margin:0">${esc(err)}</div>`:""}
+      <button class="btn primary">${closed?"查詢報名結果":"下一步"}</button></form>`, LIST_FOOT);
+    $("#reg-form").onsubmit=async e=>{ e.preventDefault(); const emp=normEmp($("#reg-emp").value); if (!emp) return;
+      e.submitter && (e.submitter.disabled=true);
+      try { const p = await apiRetry("lookupReg", cid, emp); c.regState=p.regState; lsSet("signin-emp", p.emp); p.status?showResult(p, p.status, p.pos, p.at, false):confirmWho(p); }
+      catch(err){ showInput(emp, errMsg(err)); } };
+    if (!val) $("#reg-emp").focus();
+  }
+  function confirmWho(p){
+    if (c.regState!=="open") return regShell(c, `<div class="msg warn" style="margin:0">查無 ${esc(p.name)} 的報名紀錄，報名已截止。如需參加請洽主辦單位。</div>`, LIST_FOOT);
+    const full = c.capacity && c.regCount>=c.capacity;
+    regShell(c, `<div class="label">請確認是你本人</div><div class="who">${esc(p.name)}</div>
+      <div class="muted">${esc(p.site)}${p.dept?"｜"+esc(p.dept):""}｜<span class="mono">${esc(p.emp)}</span></div>
+      ${full?`<div class="msg warn">目前名額已滿，報名後會列入候補第 ${c.waitCount+1} 位；有人取消時依序遞補。</div>`:""}
+      <div class="stack" style="margin-top:16px"><button class="btn primary" id="reg-ok">${full?"確認報名候補":"確認報名"}</button><button class="btn" id="reg-back">不是我，重新輸入</button></div>`);
+    $("#reg-back").onclick=()=>showInput("");
+    $("#reg-ok").onclick=async ev=>{ ev.target.disabled=true; ev.target.textContent="報名中…";
+      try { const r = await apiRetry("register", cid, p.emp); showResult({...p, name:r.name}, r.status, r.pos, r.at, true); }
+      catch(e){ regShell(c, `<div class="msg bad" style="margin:0">報名沒有成功：${esc(errMsg(e))}</div><div class="stack" style="margin-top:12px"><button class="btn" id="reg-retry">回上一步</button></div>`, LIST_FOOT);
+        $("#reg-retry").onclick=()=>showInput(p.emp); } };
+  }
+  function showResult(p, status, pos, at, fresh){
+    const ok = status==="ok";
+    const open = c.regState==="open";
+    regShell(c, `<div class="done"><div class="mark${ok?"":" wait"}">${ok?"✓":"候"}</div>
+      <div class="who">${esc(p.name)}</div>
+      <div class="status" style="color:${ok?"var(--jade)":"var(--brass)"}">${ok?(fresh?"報名成功":"你已完成報名"):`候補第 ${pos} 位`}</div>
+      ${ok?"":`<div class="small muted" style="margin-top:4px">有人取消時會依序遞補，可以再用工號回到這個頁面查詢最新狀態。</div>`}
+      <dl class="ticket"><dt>課程</dt><dd>${esc(c.name)}</dd><dt>日期</dt><dd class="mono">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}</dd>
+        <dt>主辦</dt><dd>${esc(c.host)}</dd><dt>工號</dt><dd class="mono">${esc(p.emp)}</dd><dt>報名時間</dt><dd class="mono">${esc(String(at||"").slice(0,16))}</dd></dl>
+      <div class="shot">請截圖保存這個畫面，上課當天掃教室裡的 QR Code 簽到。</div>
+      ${open?`<div class="stack" style="margin-top:14px"><button class="btn danger" id="reg-cancel">取消報名</button></div>
+        <p class="small muted" style="margin:8px 0 0">報名截止（${esc(c.regDeadline)}）前可以自行取消；之後請洽主辦單位。</p>`:""}</div>`, LIST_FOOT);
+    const b=$("#reg-cancel"); if (!b) return;
+    b.onclick=()=>armThen(b, async()=>{ b.disabled=true;
+      try { await apiRetry("cancelReg", cid, p.emp); try { c = await apiRetry("getRegCourse", cid); } catch(e){}
+        regShell(c, `<div class="done"><div class="mark" style="background:var(--chip);color:var(--muted)">－</div><div class="who">${esc(p.name)}</div>
+          <div class="status">已取消報名</div><p class="small muted" style="margin-top:10px">如果之後又想參加，在報名截止前回到這個頁面重新報名即可（會排在最後面）。</p></div>`, LIST_FOOT); }
+      catch(e){ toast(errMsg(e)); b.disabled=false; } });
   }
 }
 
@@ -2691,7 +2790,7 @@ async function refresh(withDetail){
 async function loadDetail(cid){ S.detail = localizeDetail(await call("getCourseDetail", cid)); }
 function softRender(){
   const a=document.activeElement;
-  if (a && a.matches("input,select,textarea") && a.closest("form[data-form]") && !a.closest("form[data-form=manual],form[data-form=export-filter]")){ S.dirty=true; return; }
+  if (a && a.matches("input,select,textarea") && a.closest("form[data-form]") && !a.closest("form[data-form=manual],form[data-form=reg-add],form[data-form=export-filter]")){ S.dirty=true; return; }
   S.dirty=false; renderAdmin();
 }
 document.addEventListener("focusout", ()=>{ if (S.dirty) setTimeout(()=>{ if (S.dirty) softRender(); },0); });
@@ -2760,33 +2859,38 @@ function viewCourses(){
   const groups={open:[],upcoming:[],ended:[]}; cs.forEach(c=>groups[c.status].push(c)); groups.upcoming.reverse();
   const item=c=>`<button class="citem" data-sel="${c.id}" aria-current="${c.id===S.selected}">
       <span class="t">${esc(c.name)}</span>
-      <span class="m">${esc(c.date)} ${esc(c.start)}｜${esc(c.host)}${c.sites.length?" 等 "+courseSites(c).length+" 家":""}${c.exportedAt?"｜已匯出":""}</span>
+      <span class="m">${esc(c.date)} ${esc(c.start)}｜${esc(c.host)}${c.sites.length?" 等 "+courseSites(c).length+" 家":""}${c.regOpen?`｜報名 ${c.regCount}${c.capacity?"/"+c.capacity:""}${c.waitCount?"＋候補 "+c.waitCount:""}`:""}${c.exportedAt?"｜已匯出":""}</span>
       <span class="n"><b>${c.count}${c.expected?`<small style="font-size:12px;color:var(--muted)">/${c.expected}</small>`:""}</b>人</span></button>`;
   const grp=(k,l)=>groups[k].length?`<div class="group-h">${l}</div>${groups[k].map(item).join("")}`:"";
   return `<div class="split">
     <section class="panel" style="padding:10px">
       <div class="panel-head" style="padding:6px 6px 0"><h2>課程</h2><button class="btn primary sm" data-act="new-course">＋ 建立課程</button></div>
       <div class="clist">${grp("open","簽到中")}${grp("upcoming","即將開始")}${grp("ended","已結束")}</div>
+      <div class="stack" style="gap:6px;padding:14px 6px 4px;border-top:1px solid var(--line);margin-top:8px">
+        <div class="label">報名專區（列出所有開放報名中的課程，可貼公告或 LINE 群組）</div>
+        <div class="linkbox"><code>${esc(REG_URL)}</code><button class="btn sm" data-copy="${esc(REG_URL)}">複製</button></div></div>
     </section>
     ${S.detail && S.detail.course.id===S.selected ? viewCourseDetail() : `<section class="panel"><div class="empty small">載入中…</div></section>`}
   </div>`;
 }
-function flagsFor(s, c, list, expSet){
+function flagsFor(s, c, list, expSet, waitSet){
   const f=[]; const late = s.at.slice(0,10)===c.date ? minOf(s.at.slice(11,16))-minOf(c.start) : 0;
   if (late>0) f.push(`<span class="chip warn">遲到 ${late} 分</span>`);
   if (s.site && !courseSites(c).includes(s.site)) f.push(`<span class="chip brass">跨館</span>`);
   if (s.method==="manual") f.push(`<span class="chip">補登${s.by?"："+esc(s.by):""}</span>`);
-  if (expSet.size && !expSet.has(s.emp)) f.push(`<span class="chip brass">名單外</span>`);
+  if (waitSet && waitSet.has(s.emp)) f.push(`<span class="chip brass">候補</span>`);
+  else if (expSet.size && !expSet.has(s.emp)) f.push(`<span class="chip brass">名單外</span>`);
   if (s.deviceId && list.filter(x=>x.deviceId===s.deviceId).length>1) f.push(`<span class="chip bad">同裝置多人</span>`);
   return {html:f.join(" "), late:Math.max(0,late)};
 }
 function viewCourseDetail(){
   const d=S.detail, c=d.course, list=d.signins, can=d.canEdit;
   const expSet=new Set(d.expected.map(x=>x.emp)); const signed=new Set(list.map(s=>s.emp));
+  const waitSet=new Set((d.regs||[]).filter(r=>r.status==="wait").map(r=>r.emp));
   const missing=d.expected.filter(x=>!signed.has(x.emp));
-  const lateN=list.filter(s=>flagsFor(s,c,list,expSet).late>0).length;
+  const lateN=list.filter(s=>flagsFor(s,c,list,expSet,waitSet).late>0).length;
   const rows=list.map((s,i)=>`<tr><td class="num muted">${i+1}</td><td class="mono">${esc(s.emp)}</td><td>${esc(s.name)}</td><td>${esc(s.dept)}</td><td>${esc(s.site)}</td>
-      <td class="mono">${esc(s.at.slice(11,16))}</td><td>${flagsFor(s,c,list,expSet).html}</td>
+      <td class="mono">${esc(s.at.slice(11,16))}</td><td>${flagsFor(s,c,list,expSet,waitSet).html}</td>
       <td>${can?`<button class="btn sm danger" data-del-signin="${esc(s.emp)}">移除</button>`:""}</td></tr>`).join("");
   return `<section class="panel">
     <div class="panel-head">
@@ -2806,7 +2910,7 @@ function viewCourseDetail(){
     </dl>
     <div class="stat-row">${d.expected.length?`<div class="stat"><b>${d.expected.length}</b><span>應到</span></div>`:""}
       <div class="stat"><b>${list.length}</b><span>已簽到</span></div>
-      ${d.expected.length?`<div class="stat"><b style="color:var(--bad)">${missing.length}</b><span>未到</span></div><div class="stat"><b>${list.filter(s=>!expSet.has(s.emp)).length}</b><span>名單外</span></div>`:""}
+      ${d.expected.length?`<div class="stat"><b style="color:var(--bad)">${missing.length}</b><span>未到</span></div><div class="stat"><b>${list.filter(s=>!expSet.has(s.emp)&&!waitSet.has(s.emp)).length}</b><span>名單外</span></div>`:""}
       <div class="stat"><b>${lateN}</b><span>遲到</span></div></div>
     <div class="stack" style="margin-top:16px">
       <div class="label">教室投影頁（在教室電腦開這個連結，投到螢幕上，不需要登入）</div>
@@ -2829,6 +2933,7 @@ function viewCourseDetail(){
         <span>簽到碼 <b class="mono" style="font-size:18px">${esc(d.code)}</b></span>
       </div>
     </div>
+    ${viewRegs(d, signed, can)}
     ${viewExpected(d, missing, can)}
     <div class="panel-head" style="margin-top:22px;margin-bottom:0"><h2>簽到名單</h2>
       <div class="row">
@@ -2841,16 +2946,43 @@ function viewCourseDetail(){
       :`<div class="empty small">還沒有人簽到。開放時段內，學員掃投影頁上的 QR Code 就會出現在這裡。</div>`}
   </section>`;
 }
+function viewRegs(d, signed, can){
+  const c=d.course;
+  if (!c.regOpen) return can?`<p class="small muted" style="margin:18px 0 0">這堂課沒有開放線上報名。需要的話按上方「編輯」→「課程報名」選「開放報名」。</p>`:"";
+  const regs=d.regs||[];
+  const state = c.regState==="open" ? `<span class="chip open">報名中</span>` : `<span class="chip">報名已截止</span>`;
+  const qr = (()=>{ try { const q=qrcode(0,"M"); q.addData(d.regUrl); q.make(); return q.createSvgTag({cellSize:4,margin:1,scalable:true}); } catch(e){ return ""; } })();
+  const rows=regs.map(r=>`<tr><td class="num muted">${r.status==="ok"?r.pos:""}</td><td class="mono">${esc(r.emp)}</td><td>${esc(r.name)}</td><td>${esc(r.dept)}</td><td>${esc(r.site)}</td>
+      <td class="mono">${esc(r.at.slice(5,16))}</td>
+      <td>${r.status==="ok"?'<span class="chip open">正取</span>':`<span class="chip brass">候補 ${r.pos}</span>`}${signed.has(r.emp)?' <span class="chip">已簽到</span>':""}</td>
+      <td class="small muted">${r.by?"代報："+esc(r.by):"本人"}</td>
+      <td><button class="btn sm danger" data-cancel-reg="${esc(r.emp)}">取消報名</button></td></tr>`).join("");
+  return `<div class="panel-head" style="margin-top:22px;margin-bottom:0"><h2>報名名單</h2>
+      <form class="row" data-form="reg-add" autocomplete="off"><input class="in mono" name="emp" placeholder="輸入工號代為報名" style="width:170px"><button class="btn sm">代為報名</button></form></div>
+    <div class="row" style="margin-top:4px">${state}<span class="small muted">截止 <span class="mono">${esc(c.regDeadline)}</span>｜${c.capacity?`名額 ${c.capacity} 人`:"不限名額"}</span></div>
+    <div class="stat-row"><div class="stat"><b>${c.regCount}${c.capacity?`<small style="font-size:14px;color:var(--muted)">/${c.capacity}</small>`:""}</b><span>正取</span></div>
+      <div class="stat"><b>${c.waitCount}</b><span>候補</span></div>
+      ${c.capacity?`<div class="stat"><b>${Math.max(0,c.capacity-c.regCount)}</b><span>剩餘名額</span></div>`:""}</div>
+    <div class="reg-qr"><div class="svgbox">${qr}</div>
+      <div class="stack small"><b style="font-size:15px">這堂課的報名連結</b>
+        <div class="linkbox"><code>${esc(d.regUrl)}</code><button class="btn sm" data-copy="${esc(d.regUrl)}">複製連結</button></div>
+        <span class="muted">把連結或 QR Code 貼到公告、LINE 群組。同仁輸入工號就能報名，截止前可以自己取消；額滿後自動排候補，有人取消時依序遞補。</span>
+        <div class="row"><button class="btn sm" data-act="reg-qr">下載報名 QR Code 圖檔</button></div></div></div>
+    ${regs.length?`<div class="tbl-wrap"><table><thead><tr><th class="num">#</th><th>工號</th><th>姓名</th><th>部門</th><th>公司別</th><th>報名時間</th><th>狀態</th><th>方式</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+      :`<div class="empty small">還沒有人報名。</div>`}`;
+}
 function viewExpected(d, missing, can){
-  const exp=d.expected;
-  const head=`<div class="panel-head" style="margin-top:22px;margin-bottom:0"><h2>上課名單${exp.length?`（未到 ${missing.length} 人）`:""}</h2>
-    <div class="row">${S.expEdit||!can?"":exp.length?`<button class="btn sm" data-act="exp-edit">修改名單</button><button class="btn sm danger" data-act="exp-clear">清除名單</button>`:""}</div></div>`;
+  const exp=d.expected, man=d.expectedManual||[], fromReg=exp.filter(x=>x.src==="reg").length;
+  const btns = S.expEdit||!can ? "" : man.length ? `<button class="btn sm" data-act="exp-edit">修改上傳名單</button><button class="btn sm danger" data-act="exp-clear">清除上傳名單</button>`
+    : exp.length ? `<button class="btn sm" data-act="exp-edit">＋ 另外上傳名單</button>` : "";
+  const head=`<div class="panel-head" style="margin-top:22px;margin-bottom:0"><h2>上課名單${exp.length?`（應到 ${exp.length} 人，未到 ${missing.length} 人）`:""}</h2>
+    <div class="row">${btns}</div></div>${fromReg?`<p class="small muted" style="margin:4px 0 0">應到名單＝報名正取 ${fromReg} 人${man.length?`＋上傳名單 ${man.length} 人（重複的只算一次）`:""}；候補的人不列入應到。</p>`:""}`;
   if (S.expEdit) return head+`<form data-form="expected" class="stack" style="margin-top:12px" autocomplete="off">
-      <textarea id="exp-text" class="in" rows="6" style="font-family:var(--f-mono)" placeholder="貼上工號：一行一個，或用逗號、空白分隔。可以直接從 Excel 複製整欄工號貼上。">${esc(exp.map(x=>x.emp).join("\n"))}</textarea>
+      <textarea id="exp-text" class="in" rows="6" style="font-family:var(--f-mono)" placeholder="貼上工號：一行一個，或用逗號、空白分隔。可以直接從 Excel 複製整欄工號貼上。">${esc(man.join("\n"))}</textarea>
       <div class="row"><span class="small muted">或上傳檔案（需有「工號」欄位）</span><input type="file" id="exp-file" accept=".xlsx,.xls,.csv" class="in" style="max-width:300px"></div>
       <div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-act="exp-cancel">取消</button><button class="btn primary">儲存上課名單</button></div></form>`;
   if (!exp.length && !can) return head+`<p class="small muted" style="margin:8px 0 0">主辦公司尚未上傳上課名單。</p>`;
-  if (!exp.length) return head+`<div class="exp-cta"><div><b>還沒有上課名單</b><div class="small muted">上傳這堂課應到的學員工號，就能即時看到誰還沒簽到。沒上傳也可以正常簽到。</div></div>
+  if (!exp.length) return head+`<div class="exp-cta"><div><b>還沒有上課名單</b><div class="small muted">上傳這堂課應到的學員工號${d.course.regOpen?"，或等同仁線上報名":""}，就能即時看到誰還沒簽到。沒有名單也可以正常簽到。</div></div>
       <button class="btn primary" data-act="exp-edit">＋ 上傳上課名單</button></div>`;
   if (!missing.length) return head+`<div class="empty small">應到的 ${exp.length} 人都已簽到。</div>`;
   return head+`<div class="tbl-wrap"><table><thead><tr><th>未到</th><th>工號</th><th>姓名</th><th>部門</th><th>公司別</th><th></th></tr></thead><tbody>
@@ -2873,9 +3005,13 @@ function viewCourseForm(){
       <div class="field span1"><label class="label" for="f-credit">學分</label><input id="f-credit" type="number" name="credit" min="0" step="0.5" value="${esc(c.credit)}"></div>
       <div class="field span1"><label class="label" for="f-sf">簽到開放</label><input id="f-sf" type="time" name="signFrom" required value="${esc(c.signFrom)}"></div>
       <div class="field span1"><label class="label" for="f-st">簽到截止</label><input id="f-st" type="time" name="signTo" required value="${esc(c.signTo)}"></div>
+      <div class="field span2"><span class="label">課程報名</span><div class="seg"><label><input type="radio" name="regOpen" value="" ${c.regOpen?"":"checked"}>不開放</label><label><input type="radio" name="regOpen" value="1" ${c.regOpen?"checked":""}>開放報名</label></div></div>
+      <div class="field span1 reg-f" ${c.regOpen?"":"hidden"}><label class="label" for="f-cap">名額上限</label><input id="f-cap" type="number" name="capacity" min="0" step="1" placeholder="不限" value="${esc(c.capacity||"")}"></div>
+      <div class="field span2 reg-f" ${c.regOpen?"":"hidden"}><label class="label" for="f-rd">報名截止日</label><input id="f-rd" type="date" name="regDate" value="${esc(toInputDate((c.regDeadline||"").slice(0,10)))}"></div>
+      <div class="field span1 reg-f" ${c.regOpen?"":"hidden"}><label class="label" for="f-rt">截止時間</label><input id="f-rt" type="time" name="regTime" value="${esc((c.regDeadline||"").slice(11,16)||"23:59")}"></div>
       <div class="field span6"><span class="label">參訓公司（跨公司的課請勾選，被勾選公司的管理員也看得到這堂課）</span>
         <div class="row" style="gap:6px 16px">${S.data.sites.map(s=>`<label class="small" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="sites" value="${esc(s)}" ${(c.sites||[]).includes(s)?"checked":""}>${esc(s)}</label>`).join("")}</div></div>
-      <p class="span6 small muted" style="margin:0">時數會依開始、結束時間自動計算（以 0.5 小時為單位），學分再依時數自動帶入（每 30 分鐘 0.5 學分）；兩者都可以手動修改，例如扣除午休或不計學分的課改成 0。匯入檔以此處的時數與學分為準。簽到時段預設為開課前 30 分鐘到開課後 30 分鐘，開課時間之後簽到會標記遲到。</p>
+      <p class="span6 small muted" style="margin:0">時數會依開始、結束時間自動計算（以 0.5 小時為單位），學分再依時數自動帶入（每 30 分鐘 0.5 學分）；兩者都可以手動修改，例如扣除午休或不計學分的課改成 0。匯入檔以此處的時數與學分為準。簽到時段預設為開課前 30 分鐘到開課後 30 分鐘，開課時間之後簽到會標記遲到。開放報名時，截止日預設為開課前一天；名額上限留空＝不限，額滿後自動排候補。只有主辦與參訓公司的同仁可以報名。</p>
       <div class="span6 row" style="justify-content:flex-end"><button type="button" class="btn" data-act="cancel-edit">取消</button><button class="btn primary">${c.id?"儲存變更":"建立課程"}</button></div>
     </form></section>`;
 }
@@ -2966,7 +3102,7 @@ function viewExport(){
       <span class="small">${sel.length?"":'<span class="chip warn">請先勾選要匯出的課程</span> '}已選 <b>${sel.length}</b> 堂課，共 <b class="mono">${total}</b> 筆簽到紀錄</span>
       <div class="row"><button class="btn" data-act="export-detail" ${sel.length?"":"disabled"}>匯出簽到明細（內部留存）</button>
         ${isHr()?`<button class="btn primary" data-act="export-import" ${total?"":"disabled"}>匯出人資系統匯入檔</button>`:""}</div></div>
-    <p class="small muted">${isHr()?"匯入檔格式：工作表 HUM0020100（自訂序號、員工工號）＋ Link.HUM0021000（訓練名稱、訓練項目代碼、內外訓、講師、訓練日期 yyyymmdd、時數、學分），序號從 1 起依日期、課程、工號排序。被「移除」的簽到不會匯出。":"簽到明細含簽到時間、遲到、補登與註記；有上課名單的課程另附「未到名單」工作表。"}</p>
+    <p class="small muted">${isHr()?"匯入檔格式：工作表 HUM0020100（自訂序號、員工工號）＋ Link.HUM0021000（訓練名稱、訓練項目代碼、內外訓、講師、訓練日期 yyyymmdd、時數、學分），序號從 1 起依日期、課程、工號排序。被「移除」的簽到不會匯出。":"簽到明細含簽到時間、遲到、補登與註記；有上課名單的課程另附「未到名單」，有開放報名的課程另附「報名名單」工作表。"}</p>
   </section>`;
 }
 const rangeTag = () => `${S.exportFrom.replace(/\//g,"")}-${S.exportTo.replace(/\//g,"")}`;
@@ -2991,6 +3127,7 @@ async function doExportDetail(btn, ids, tag){
     const ws=XLSX.utils.aoa_to_sheet([head,...r.detail]); ws["!cols"]=[10,28,10,12,12,12,10,14,12,20,8,14,14].map(w=>({wch:w}));
     XLSX.utils.book_append_sheet(wb,ws,"簽到明細");
     if (r.hasExpected){ const wm=XLSX.utils.aoa_to_sheet([["主辦公司","訓練名稱","訓練日期","工號","姓名","部門","員工所屬公司別"],...r.missing]); wm["!cols"]=[10,28,12,12,14,12,14].map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb,wm,"未到名單"); }
+    if (r.regs && r.regs.length){ const wr=XLSX.utils.aoa_to_sheet([["主辦公司","訓練名稱","訓練日期","工號","姓名","部門","員工所屬公司別","報名時間","正取/候補","報名方式","簽到"],...r.regs]); wr["!cols"]=[10,28,12,12,14,12,14,20,10,16,8].map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb,wr,"報名名單"); }
     downloadBlob(new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]), safeName(`教育訓練簽到明細_${tag}.xlsx`));
   });
 }
@@ -3040,14 +3177,14 @@ function viewLog(){
 }
 
 /* ---------- QR Code 圖檔 ---------- */
-function qrCardCanvas(d){
-  const c=d.course;
+function qrCardCanvas(d, mode){
+  const c=d.course, reg=mode==="reg";
   {
-    const qr=qrcode(0,"M"); qr.addData(d.studentUrl); qr.make();
+    const qr=qrcode(0,"M"); qr.addData(reg?d.regUrl:d.studentUrl); qr.make();
     const W=1200, H=1780, cv=document.createElement("canvas"); cv.width=W; cv.height=H;
     const g=cv.getContext("2d"), sans='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif', serif='"Noto Serif TC","Songti TC",serif';
     g.fillStyle="#FFFFFF"; g.fillRect(0,0,W,H); g.strokeStyle="#DCE3E1"; g.lineWidth=4; g.strokeRect(30,30,W-60,H-60);
-    g.textAlign="center"; g.fillStyle="#9A7631"; g.font=`500 38px ${sans}`; g.fillText(`${c.host}｜教育訓練簽到`, W/2, 130);
+    g.textAlign="center"; g.fillStyle="#9A7631"; g.font=`500 38px ${sans}`; g.fillText(`${c.host}｜教育訓練${reg?"報名":"簽到"}`, W/2, 130);
     g.fillStyle="#18272A"; g.font=`700 64px ${serif}`;
     const lines=[]; let cur=""; for (const ch of c.name){ if (g.measureText(cur+ch).width>1020){ lines.push(cur); cur=ch; } else cur+=ch; } if (cur) lines.push(cur);
     let y=225; lines.slice(0,2).forEach(l=>{ g.fillText(l,W/2,y); y+=82; });
@@ -3055,10 +3192,17 @@ function qrCardCanvas(d){
     const n=qr.getModuleCount(), cell=Math.floor(860/n), size=cell*n, qx=(W-size)/2, qy=y+70;
     g.fillStyle="#000000"; for (let r=0;r<n;r++) for (let k=0;k<n;k++) if (qr.isDark(r,k)) g.fillRect(qx+k*cell, qy+r*cell, cell, cell);
     const by=qy+size+90;
+    if (reg){
+      g.fillStyle="#5D6D70"; g.font=`400 36px ${sans}`; g.fillText("報名截止", W/2, by);
+      g.fillStyle="#18272A"; g.font=`600 84px "IBM Plex Mono",Menlo,Consolas,monospace`; g.fillText(c.regDeadline.slice(5), W/2, by+105);
+      g.fillStyle="#0E6B5A"; g.font=`500 40px ${sans}`; g.fillText("用手機相機掃描 QR Code，輸入工號完成報名", W/2, by+200);
+      g.fillStyle="#5D6D70"; g.font=`400 32px ${sans}`; g.fillText(c.capacity?`名額 ${c.capacity} 人，額滿後可報名候補`:"不限名額", W/2, by+260);
+    } else {
     g.fillStyle="#5D6D70"; g.font=`400 36px ${sans}`; g.fillText("簽到碼", W/2, by);
     g.fillStyle="#18272A"; g.font=`600 110px "IBM Plex Mono",Menlo,Consolas,monospace`; g.fillText(d.code.replace(/(\d{3})(\d{3})/,"$1 $2"), W/2, by+120);
     g.fillStyle="#0E6B5A"; g.font=`500 40px ${sans}`; g.fillText("用手機相機掃描 QR Code，輸入工號完成簽到", W/2, by+215);
     g.fillStyle="#5D6D70"; g.font=`400 32px ${sans}`; g.fillText(`簽到時段 ${c.signFrom}–${c.signTo}`, W/2, by+275);
+    }
     return cv;
   }
 }
@@ -3068,14 +3212,14 @@ function qrPreviewUrl(d){
   if (!S.qrCache[key]){ try { S.qrCache[key]=qrCardCanvas(d).toDataURL("image/png"); } catch(e){ return ""; } }
   return S.qrCache[key];
 }
-async function downloadQr(btn){
+async function downloadQr(btn, mode){
   const d=S.detail, c=d.course;
   await act(btn, async()=>{
     try { await document.fonts.ready; } catch {}
-    const cv=qrCardCanvas(d);
+    const cv=qrCardCanvas(d, mode);
     const blob=await new Promise(res=>cv.toBlob(res,"image/png"));
-    downloadBlob(blob, safeName(`簽到QR_${c.host}_${c.date.replace(/\//g,"")}_${c.name.slice(0,20)}.png`));
-    toast("如果沒有開始下載，請在下方 QR Code 圖片上按右鍵 →「另存圖片」");
+    downloadBlob(blob, safeName(`${mode==="reg"?"報名":"簽到"}QR_${c.host}_${c.date.replace(/\//g,"")}_${c.name.slice(0,20)}.png`));
+    toast(mode==="reg"?"已下載報名 QR Code 圖檔":"如果沒有開始下載，請在下方 QR Code 圖片上按右鍵 →「另存圖片」");
   });
 }
 
@@ -3094,6 +3238,7 @@ document.addEventListener("click", async e=>{
   if (D.copy) return copyText(D.copy);
   if (D.override!==undefined) return act(t, async()=>{ await call("setOverride", S.selected, D.override); await refresh(); renderAdmin(); toast("已更新"); });
   if (D.delSignin) return armThen(t, ()=>act(t, async()=>{ await call("removeSignin", S.selected, D.delSignin); await refresh(); renderAdmin(); toast("已移除"); }));
+  if (D.cancelReg) return armThen(t, ()=>act(t, async()=>{ await call("adminCancelReg", S.selected, D.cancelReg); await refresh(); renderAdmin(); toast("已取消報名，候補會自動遞補"); }));
   if (D.manualEmp) return act(t, async()=>{ const n=await call("manualSign", S.selected, D.manualEmp); await refresh(); renderAdmin(); toast(`已補登 ${n}`); });
   if (D.viewRoster){ if (S.rosterView===D.viewRoster){ S.rosterView=null; return renderAdmin(); } S.rosterView=D.viewRoster; S.rosterQ=""; S.rosterRows=null; renderAdmin();
     return act(null, async()=>{ S.rosterRows=await call("viewRoster", S.rosterView, ""); renderAdmin(); }); }
@@ -3106,14 +3251,15 @@ document.addEventListener("click", async e=>{
   if (D.delAdmin) return armThen(t, ()=>act(t, async()=>{ await call("deleteAdmin", D.delAdmin); S.admins=await call("listAdmins"); if (S.adminEdit?.account===D.delAdmin) S.adminEdit=null; renderAdmin(); toast("已刪除"); }));
   const a=D.act; if (!a) return;
   if (a==="logout"){ api("logout", S.token).catch(()=>{}); S.token=null; S.user=null; lsSet("hl-token",""); S.tab="courses"; S.selected=null; S.detail=null; return renderAdmin(); }
-  if (a==="new-course"){ const s="09:00"; const cs=S.user.companies; S.editing={host:cs.includes("台北漢來")?"台北漢來":cs[0], sites:[], name:"", itemCode:"T002", inOuter:"0", teacher:"", date:S.data.today, start:s, end:"11:00", hours:2, credit:2, signFrom:addMin(s,-30), signTo:addMin(s,30)}; return renderAdmin(); }
-  if (a==="edit-course"){ const c=S.detail.course; S.editing={...c, sites:[...c.sites]}; return renderAdmin(); }
+  if (a==="new-course"){ const s="09:00"; const cs=S.user.companies; S.editing={host:cs.includes("台北漢來")?"台北漢來":cs[0], sites:[], name:"", itemCode:"T002", inOuter:"0", teacher:"", date:S.data.today, start:s, end:"11:00", hours:2, credit:2, signFrom:addMin(s,-30), signTo:addMin(s,30), regOpen:false, capacity:"", regDeadline:prevDay(S.data.today)+" 23:59"}; return renderAdmin(); }
+  if (a==="edit-course"){ const c=S.detail.course; S.editing={...c, sites:[...c.sites], capacity:c.capacity||"", regDeadline:c.regDeadline||(prevDay(c.date)+" 23:59")}; return renderAdmin(); }
   if (a==="cancel-edit"){ S.editing=null; return renderAdmin(); }
   if (a==="del-course") return armThen(t, ()=>act(t, async()=>{ await call("deleteCourse", S.selected); S.selected=null; S.detail=null; await refresh(false); renderAdmin(); toast("課程已刪除"); }));
   if (a==="exp-edit"){ S.expEdit=true; renderAdmin(); $("#exp-text")?.focus(); return; }
   if (a==="exp-cancel"){ S.expEdit=false; return renderAdmin(); }
   if (a==="exp-clear") return armThen(t, ()=>act(t, async()=>{ await call("setExpected", S.selected, []); await refresh(); renderAdmin(); toast("已清除上課名單"); }));
   if (a==="download-qr") return downloadQr(t);
+  if (a==="reg-qr") return downloadQr(t, "reg");
   if (a==="proj-here"){ const d=S.detail; const pt=new URL(d.projUrl).searchParams.get("pt"); S.projecting=true; window.scrollTo(0,0);
     return startProjector(d.course.id, pt, async()=>{ S.projecting=false; renderAdmin(); try { await refresh(); renderAdmin(); } catch(e){} }); }
   if (a==="seed-demo") return act(t, async()=>{ const id=await call("seedDemo"); S.selected=id; S.rosterSum=null; S.tab="courses"; await refresh(); renderAdmin(); toast("已載入示範資料：工號 E10021～E10088"); });
@@ -3135,9 +3281,11 @@ document.addEventListener("input", e=>{
   if (e.target.name==="start"){ f.signFrom.value=addMin(e.target.value,-30); f.signTo.value=addMin(e.target.value,30); }
   if ((e.target.name==="start"||e.target.name==="end") && f.start.value && f.end.value){ const d=minOf(f.end.value)-minOf(f.start.value); if (d>0){ f.hours.value=Math.round(d/30)/2; f.credit.value=creditOf(f.hours.value); } }
   if (e.target.name==="hours") f.credit.value=creditOf(e.target.value);
+  if (e.target.name==="date" && e.target.value && f.regDate) f.regDate.value=toInputDate(prevDay(fromInputDate(e.target.value)));
 });
 document.addEventListener("change", e=>{
   if (e.target.id==="ad-role"){ const w=$("#ad-comp-wrap"); if (w) w.hidden=e.target.value!=="company"; return; }
+  if (e.target.name==="regOpen"){ document.querySelectorAll(".reg-f").forEach(x=>x.hidden=e.target.value!=="1"); return; }
   const f=e.target.closest("form[data-form=export-filter]"); if (!f) return;
   S.exportSite=f.site.value; S.exportFrom=fromInputDate(f.from.value); S.exportTo=fromInputDate(f.to.value); renderAdmin();
 });
@@ -3158,9 +3306,18 @@ document.addEventListener("submit", async e=>{
     S.user=await call("changePassword", v.old, v.pw); await refresh(); renderAdmin(); toast("密碼已更新"); });
   if (kind==="course") return act(btn, async()=>{
     if (minOf(v.signTo)<minOf(v.signFrom)) throw new Error("簽到截止時間要晚於開放時間");
+    const regDeadline = v.regOpen==="1" ? `${fromInputDate(v.regDate)} ${v.regTime}` : "";
+    if (v.regOpen==="1"){
+      if (!v.regDate || !v.regTime) throw new Error("請填寫報名截止的日期與時間");
+      if (regDeadline > `${fromInputDate(v.date)} ${v.start}`) throw new Error("報名截止時間不能晚於開課時間");
+      const nowStr = (()=>{ const t=new Date(); return `${t.getFullYear()}/${pad(t.getMonth()+1)}/${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}`; })();
+      if (regDeadline < nowStr && regDeadline !== S.editing.regDeadline) throw new Error("報名截止時間已經過了，請改成之後的時間");
+    }
     const d={ id:S.editing.id||"", host:v.host, sites:fd.getAll("sites").filter(x=>x!==v.host), name:v.name, itemCode:v.itemCode, inOuter:v.inOuter, teacher:v.teacher,
-      date:fromInputDate(v.date), start:v.start, end:v.end, hours:v.hours, credit:v.credit||0, signFrom:v.signFrom, signTo:v.signTo };
+      date:fromInputDate(v.date), start:v.start, end:v.end, hours:v.hours, credit:v.credit||0, signFrom:v.signFrom, signTo:v.signTo,
+      regOpen:v.regOpen==="1"?"1":"", capacity:v.capacity||"", regDeadline };
     const id=await call("saveCourse", d); S.selected=id; S.editing=null; S.detail=null; await refresh(); renderAdmin(); toast(d.id?"已儲存":"課程已建立"); });
+  if (kind==="reg-add") return act(btn, async()=>{ const emp=normEmp(v.emp); if (!emp) return; const r=await call("adminAddReg", S.selected, emp); await refresh(); renderAdmin(); toast(r.status==="ok"?`已幫 ${r.name} 報名`:`${r.name} 已列入候補第 ${r.pos} 位`); });
   if (kind==="manual") return act(btn, async()=>{ const emp=normEmp(v.emp); if (!emp) return; const n=await call("manualSign", S.selected, emp); await refresh(); renderAdmin(); toast(`已補登 ${n}`); });
   if (kind==="expected") return act(btn, async()=>{
     let tokens=$("#exp-text").value.split(/[\s,，、;；]+/);
@@ -3183,6 +3340,7 @@ document.addEventListener("submit", async e=>{
 /* ===== 路由（放在最後，確保上面的設定都已載入） ===== */
 if (PARAMS.page==="admin") startAdmin();
 else if (PARAMS.page==="proj") startProjector(PARAMS.c, PARAMS.pt);
+else if (PARAMS.page==="reg") PARAMS.c ? startReg(PARAMS.c) : startRegList();
 else if (PARAMS.c && PARAMS.k) startStudent(PARAMS.c, PARAMS.k);
 else startLanding();
 </script>
