@@ -2822,7 +2822,7 @@ function renderAdmin(){
   app.innerHTML=`<div class="wrap">
     <div class="userbar"><span><b>${esc(u.name)}</b>（${esc(u.account)}）｜${esc(u.roleName)}${u.role==="company"?"："+esc(u.companies.join("、")):""}</span><button class="btn sm" data-act="logout">登出</button></div>
     <header class="top">
-      <div class="brand-row">${LOGO_IMG}<span class="divider"></span><div class="brand"><h1>教育訓練簽到</h1><p>開課 → 教室投影 QR → 學員手機簽到 → 匯出人資系統匯入檔</p></div></div>
+      <div class="brand-row">${LOGO_IMG}<span class="divider"></span><div class="brand"><h1>教育訓練簽到</h1></div></div>
       <nav class="tabs" role="tablist">${tabs.map(([k,v])=>`<button class="tab" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${v}</button>`).join("")}</nav>
     </header>
     <main>${S.tab==="courses"?viewCourses(): S.tab==="roster"?viewRoster(): S.tab==="export"?viewExport(): S.tab==="accounts"?viewAccounts(): S.tab==="log"?viewLog(): viewMe()}</main>
@@ -2924,6 +2924,8 @@ function viewCourseDetail(){
       <div><dt>時數／學分</dt><dd class="mono">${esc(c.hours)} 小時／${esc(c.credit)}</dd></div>
       <div><dt>簽到碼</dt><dd class="mono">${esc(d.code)}</dd></div>
     </dl>
+    ${viewRegs(d, signed, can)}
+    ${c.regOpen?`<div class="panel-head" style="margin-top:26px;margin-bottom:0;padding-top:18px;border-top:1px solid var(--line)"><h2>課堂簽到</h2></div>`:""}
     <div class="stat-row">${d.expected.length?`<div class="stat"><b>${d.expected.length}</b><span>應到</span></div>`:""}
       <div class="stat"><b>${list.length}</b><span>已簽到</span></div>
       ${d.expected.length?`<div class="stat"><b style="color:var(--bad)">${missing.length}</b><span>未到</span></div><div class="stat"><b>${list.filter(s=>!expSet.has(s.emp)&&!waitSet.has(s.emp)).length}</b><span>名單外</span></div>`:""}
@@ -2949,7 +2951,6 @@ function viewCourseDetail(){
         <span>簽到碼 <b class="mono" style="font-size:18px">${esc(d.code)}</b></span>
       </div>
     </div>
-    ${viewRegs(d, signed, can)}
     ${viewExpected(d, missing, can)}
     <div class="panel-head" style="margin-top:22px;margin-bottom:0"><h2>簽到名單</h2>
       <div class="row">
