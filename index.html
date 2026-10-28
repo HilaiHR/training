@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>漢來教育訓練簽到</title>
+<title>嗨！來上課 HILAI CLASS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
@@ -43,6 +43,7 @@ button{cursor:pointer}
 .top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:22px 14px;border-bottom:1px solid var(--line)}
 .brand h1{font-family:var(--f-display);font-size:24px;letter-spacing:.02em}
 .brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.brand .brand-en{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;letter-spacing:.32em;color:var(--brass)}
 .tabs{display:flex;gap:4px;flex-wrap:wrap}
 .tab{border:0;background:transparent;padding:8px 14px;border-radius:8px;color:var(--muted);font-weight:500}
 .tab[aria-selected="true"]{background:var(--jade-soft);color:var(--jade)}
@@ -173,6 +174,15 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .stack{display:flex;flex-direction:column;gap:12px}
 .stu .info{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:13px;color:var(--muted)}
 .stu .info b{color:var(--ink);font-weight:500}
+.ill{display:block;color:var(--brass);flex:none}
+.ill .soft{fill:var(--brass-soft)}
+.ill .solid{fill:currentColor;stroke:none}
+.ill text{fill:currentColor;stroke:none;font-family:var(--f-body)}
+.stu .done .ill{margin:0 auto 6px}
+.stu .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.empty-ill{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--muted);padding:6px 0}
+.empty-ill b{color:var(--ink);font-weight:400;font-size:17px}
+@media (prefers-reduced-motion:no-preference){.stu .done .ill{animation:pop .5s ease-out}}
 .stu .done .mark.wait{background:var(--brass-soft);color:var(--brass);font-size:26px;font-weight:700}
 .stu .done .status{font-size:20px;font-weight:700;margin-top:2px}
 .stu .ticket{border-top:1px dashed var(--line);margin:16px 0 0;padding-top:12px;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:14px}
@@ -2579,19 +2589,30 @@ function downloadBlob(blob, filename){
 const safeName = s => s.replace(/[\\/:*?"<>|]/g,"_");
 
 
+
+/* ===== 插圖（線條圖示，品牌褐灰） ===== */
+const ILL = {
+  hi: t=>`<path class="soft" d="M20 20h50a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H46L32 78V66H20a10 10 0 0 1-10-10V30a10 10 0 0 1 10-10z"/><text x="45" y="52" text-anchor="middle" font-size="24">${t||"嗨"}</text><path d="M82 12l5-6M86 22l8-1M74 8l1-6"/>`,
+  book: ()=>`<path class="soft" d="M48 30c-9-6-21-8-34-6v46c13-2 25 0 34 6 9-6 21-8 34-6V24c-13-2-25 0-34 6z"/><path d="M48 30v46M22 36c7-1 13 0 19 2M22 46c7-1 13 0 19 2M22 56c7-1 13 0 19 2M55 38c6-2 12-3 19-2M55 48c6-2 12-3 19-2"/><path d="M84 6v10M79 11h10M12 8v7M8.5 11.5h7"/>`,
+  ticket: ()=>`<path class="soft" d="M12 30a6 6 0 0 0 6-6h60a6 6 0 0 0 6 6v10a8 8 0 0 0 0 16v10a6 6 0 0 0-6 6H18a6 6 0 0 0-6-6V56a8 8 0 0 0 0-16z"/><path d="M64 28v6M64 42v6M64 56v6M64 70v0" stroke-dasharray="0"/><path d="M28 49l8 8 16-17"/><path d="M8 12l4 4M20 6l1 6M88 10l-4 5M90 22l-6 1"/>`,
+  hourglass: ()=>`<path d="M28 12h40M28 84h40"/><path class="soft" d="M33 12c0 18 30 21 30 36S33 66 33 84h30c0-18-30-21-30-36s30-18 30-36z"/><path class="solid" d="M38 80c3-8 17-8 20 0z"/><path class="solid" d="M40 24h16c-2 6-6 10-8 11-2-1-6-5-8-11z"/><path d="M48 46v8" stroke-dasharray="2 4"/>`,
+  check: ()=>`<circle class="soft" cx="48" cy="50" r="30"/><path d="M34 50l10 10 19-20"/><path d="M84 12v10M79 17h10M12 16v8M8 20h8M82 78l4 4"/>`,
+  coffee: ()=>`<path class="soft" d="M22 40h42v16a18 18 0 0 1-18 18h-6a18 18 0 0 1-18-18z"/><path d="M64 45h5a8 8 0 0 1 0 16h-6M16 82h56"/><path d="M34 30c-3-4 3-7 0-11M44 30c-3-4 3-7 0-11M54 30c-3-4 3-7 0-11"/>`,
+};
+const ill = (name, size=88, arg) => `<svg class="ill" width="${size}" height="${size}" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ILL[name](arg)}</svg>`;
 /* ================================================================
    學員簽到
    ================================================================ */
 function stuShell(c, inner, foot){
-  $("#app").innerHTML=`<div class="stu">${LOGO_TOP}${c?`<div class="site-name">${esc(c.host)}｜教育訓練簽到</div><h1>${esc(c.name)}</h1>
-    <div class="small muted">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}　講師 ${esc(c.teacher)}</div>`:`<div class="site-name">漢來教育訓練簽到</div><h1>課程簽到</h1>`}
+  $("#app").innerHTML=`<div class="stu">${LOGO_TOP}${c?`<div class="site-name">${esc(c.host)}｜嗨！來上課・課堂簽到</div><h1>${esc(c.name)}</h1>
+    <div class="small muted">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}　講師 ${esc(c.teacher)}</div>`:`<div class="hero"><div><div class="site-name">嗨！來上課 HILAI CLASS</div><h1>課堂簽到</h1></div>${ill("hi",64)}</div>`}
     <div class="card">${inner}</div>${foot?`<div class="foot">${foot}</div>`:""}</div>`;
 }
 const REG_FOOT = `<a href="${REG_URL}">要報名課程？前往報名專區</a>`;
 async function startLanding(){
   let open;
   try { open = await apiRetry("getLanding"); } catch(e){ return stuShell(null, `<div class="msg bad" style="margin:0">${esc(errMsg(e))}</div>`); }
-  if (!open.length) return stuShell(null, `<div class="msg warn" style="margin:0">目前沒有開放簽到的課程。請在上課時間再試一次，或洽人資同仁。</div>`, REG_FOOT);
+  if (!open.length) return stuShell(null, `<div class="empty-ill">${ill("coffee",88)}<b>目前沒有開放簽到的課程</b><span class="small">先喝杯咖啡，上課時間再來掃一次；有問題請洽人資同仁。</span></div>`, REG_FOOT);
   let sel = open.length===1 ? open[0].id : null;
   const draw = err => {
     stuShell(null, `<form class="stack" id="land-form" autocomplete="off">
@@ -2645,7 +2666,7 @@ async function startStudent(cid, code, onBadCode){
       catch(e){ stuShell(c, `<div class="msg bad" style="margin:0">簽到沒有成功：${esc(errMsg(e))}<br>請再掃一次 QR Code，或洽人資同仁。</div>`); } };
   }
   function done(name, at, already){
-    stuShell(c, `<div class="done"><div class="mark">✓</div><div class="who">${esc(name)}</div>
+    stuShell(c, `<div class="done">${ill("check",96)}<div class="who">${esc(name)}</div>
       <div>${already?"你已經簽到過了":"簽到完成"}</div><div class="mono muted" style="margin-top:4px">${esc(String(at).slice(0,16))}</div>
       <p class="small muted" style="margin-top:14px">可以關閉這個頁面了，祝上課愉快。</p></div>`);
   }
@@ -2661,8 +2682,8 @@ function seatText(c){
   return left>0 ? `名額 ${c.capacity} 人，剩 ${left} 個名額` : `名額 ${c.capacity} 人已額滿${c.waitCount?`，候補 ${c.waitCount} 人`:""}，可報名候補`;
 }
 function regShell(c, inner, foot){
-  $("#app").innerHTML=`<div class="stu">${LOGO_TOP}${c?`<div class="site-name">${esc(c.host)}｜教育訓練報名</div><h1>${esc(c.name)}</h1>
-    <div class="small muted">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}　講師 ${esc(c.teacher)}</div>`:`<div class="site-name">漢來教育訓練</div><h1>課程報名</h1>`}
+  $("#app").innerHTML=`<div class="stu">${LOGO_TOP}${c?`<div class="site-name">${esc(c.host)}｜嗨！來上課・課程報名</div><h1>${esc(c.name)}</h1>
+    <div class="small muted">${esc(c.date)}　${esc(c.start)}–${esc(c.end)}　講師 ${esc(c.teacher)}</div>`:`<div class="hero"><div><div class="site-name">嗨！來上課 HILAI CLASS</div><h1>課程報名</h1></div>${ill("book",64)}</div>`}
     <div class="card">${inner}</div>${foot?`<div class="foot">${foot}</div>`:""}</div>`;
 }
 const LIST_FOOT = `<a href="${REG_URL}">查看其他可報名的課程</a>`;
@@ -2670,7 +2691,7 @@ async function startRegList(){
   regShell(null, "載入中…");
   let list;
   try { list = await apiRetry("getRegList"); } catch(e){ return regShell(null, `<div class="msg bad" style="margin:0">${esc(errMsg(e))}</div>`); }
-  if (!list.length) return regShell(null, `<div class="msg warn" style="margin:0">目前沒有開放報名的課程。</div>`);
+  if (!list.length) return regShell(null, `<div class="empty-ill">${ill("coffee",88)}<b>目前沒有開放報名的課程</b><span class="small">新課程開放後會出現在這裡，晚點再來看看。</span></div>`);
   regShell(null, `<div class="stack"><div class="label">選擇要報名的課程</div><div class="pick">${list.map(c=>`<button type="button" data-reg="${esc(c.id)}">
       <b>${esc(c.name)}</b><div class="small muted">${esc(c.host)}${c.sites.length>1?"等 "+c.sites.length+" 家":""}｜${esc(c.date)} ${esc(c.start)}–${esc(c.end)}</div>
       <div class="small" style="margin-top:2px">${esc(seatText(c))}<span class="muted">｜截止 ${esc(fmtDL(c.regDeadline))}</span></div></button>`).join("")}</div></div>`);
@@ -2714,7 +2735,7 @@ async function startReg(cid){
   function showResult(p, status, pos, at, fresh){
     const ok = status==="ok";
     const open = c.regState==="open";
-    regShell(c, `<div class="done"><div class="mark${ok?"":" wait"}">${ok?"✓":"候"}</div>
+    regShell(c, `<div class="done">${ill(ok?"ticket":"hourglass",96)}
       <div class="who">${esc(p.name)}</div>
       <div class="status" style="color:${ok?"var(--jade)":"var(--brass)"}">${ok?(fresh?"報名成功":"你已完成報名"):`候補第 ${pos} 位`}</div>
       ${ok?"":`<div class="small muted" style="margin-top:4px">有人取消時會依序遞補，可以再用工號回到這個頁面查詢最新狀態。</div>`}
@@ -2726,7 +2747,7 @@ async function startReg(cid){
     const b=$("#reg-cancel"); if (!b) return;
     b.onclick=()=>armThen(b, async()=>{ b.disabled=true;
       try { await apiRetry("cancelReg", cid, p.emp); try { c = await apiRetry("getRegCourse", cid); } catch(e){}
-        regShell(c, `<div class="done"><div class="mark" style="background:var(--chip);color:var(--muted)">－</div><div class="who">${esc(p.name)}</div>
+        regShell(c, `<div class="done">${ill("hi",88,"掰")}<div class="who">${esc(p.name)}</div>
           <div class="status">已取消報名</div><p class="small muted" style="margin-top:10px">如果之後又想參加，在報名截止前回到這個頁面重新報名即可（會排在最後面）。</p></div>`, LIST_FOOT); }
       catch(e){ toast(errMsg(e)); b.disabled=false; } });
   }
@@ -2822,18 +2843,19 @@ function renderAdmin(){
   app.innerHTML=`<div class="wrap">
     <div class="userbar"><span><b>${esc(u.name)}</b>（${esc(u.account)}）｜${esc(u.roleName)}${u.role==="company"?"："+esc(u.companies.join("、")):""}</span><button class="btn sm" data-act="logout">登出</button></div>
     <header class="top">
-      <div class="brand-row">${LOGO_IMG}<span class="divider"></span><div class="brand"><h1>教育訓練簽到</h1></div></div>
+      <div class="brand-row">${LOGO_IMG}<span class="divider"></span><div class="brand"><h1>嗨！來上課</h1><p class="brand-en">HILAI CLASS</p></div></div>
       <nav class="tabs" role="tablist">${tabs.map(([k,v])=>`<button class="tab" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${v}</button>`).join("")}</nav>
     </header>
     <main>${S.tab==="courses"?viewCourses(): S.tab==="roster"?viewRoster(): S.tab==="export"?viewExport(): S.tab==="accounts"?viewAccounts(): S.tab==="log"?viewLog(): viewMe()}</main>
   </div>`;
   const ne=$("#exp-text"); if (ne && draft!=null) ne.value=draft;
   const qi=$("#qr-preview"); if (qi && S.detail) qi.src=qrPreviewUrl(S.detail);
+  const ri=$("#reg-preview"); if (ri && S.detail) ri.src=qrPreviewUrl(S.detail, "reg");
   window.scrollTo(0,keep);
 }
 
 /* ---------- 登入 ---------- */
-function authShell(title, sub, body){ return `<div class="stu" style="max-width:420px">${LOGO_TOP}<div class="site-name">漢來教育訓練簽到｜管理後台</div><h1>${title}</h1><div class="small muted">${sub}</div><div class="card">${body}</div></div>`; }
+function authShell(title, sub, body){ return `<div class="stu" style="max-width:420px">${LOGO_TOP}<div class="site-name">嗨！來上課 HILAI CLASS｜管理後台</div><h1>${title}</h1><div class="small muted">${sub}</div><div class="card">${body}</div></div>`; }
 function chpwForm(){ return `<form class="stack" data-form="chpw" autocomplete="off">
     <label class="label" for="cp-old">目前密碼</label><input id="cp-old" name="old" type="password" class="in" required>
     <label class="label" for="cp-pw">新密碼（至少 8 個字元）</label><input id="cp-pw" name="pw" type="password" class="in" required>
@@ -2867,7 +2889,7 @@ const courseSites = c => [c.host, ...(c.sites||[])].filter((v,i,a)=>v && a.index
 function viewCourses(){
   if (S.editing) return viewCourseForm();
   const cs=S.data.courses.slice().sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start));
-  if (!cs.length) return `<div class="panel"><div class="empty">
+  if (!cs.length) return `<div class="panel"><div class="empty"><div style="display:flex;justify-content:center;margin-bottom:6px">${ill("book",80)}</div>
       <h3>${isHr()?"還沒有任何課程":"你管理的公司目前沒有課程"}</h3><p>先建立一堂課，系統會產生該堂課的簽到 QR Code。${isHr()?"<br>想先看看流程，可以載入示範資料（台北漢來 8 位示範學員＋今天一堂課）。":""}</p>
       <div class="row" style="justify-content:center;margin-top:12px"><button class="btn primary" data-act="new-course">建立課程</button>
       ${isHr()?`<button class="btn" data-act="seed-demo">載入示範資料</button>`:""}</div></div></div>`;
@@ -2968,7 +2990,6 @@ function viewRegs(d, signed, can){
   if (!c.regOpen) return can?`<p class="small muted" style="margin:18px 0 0">這堂課沒有開放線上報名。需要的話按上方「編輯」→「課程報名」選「開放報名」。</p>`:"";
   const regs=d.regs||[];
   const state = c.regState==="open" ? `<span class="chip open">報名中</span>` : `<span class="chip">報名已截止</span>`;
-  const qr = (()=>{ try { const q=qrcode(0,"M"); q.addData(d.regUrl); q.make(); return q.createSvgTag({cellSize:4,margin:1,scalable:true}); } catch(e){ return ""; } })();
   const rows=regs.map(r=>`<tr><td class="num muted">${r.status==="ok"?r.pos:""}</td><td class="mono">${esc(r.emp)}</td><td>${esc(r.name)}</td><td>${esc(r.dept)}</td><td>${esc(r.site)}</td>
       <td class="mono">${esc(r.at.slice(5,16))}</td>
       <td>${r.status==="ok"?'<span class="chip open">正取</span>':`<span class="chip brass">候補 ${r.pos}</span>`}${signed.has(r.emp)?' <span class="chip">已簽到</span>':""}</td>
@@ -2980,11 +3001,17 @@ function viewRegs(d, signed, can){
     <div class="stat-row"><div class="stat"><b>${c.regCount}${c.capacity?`<small style="font-size:14px;color:var(--muted)">/${c.capacity}</small>`:""}</b><span>正取</span></div>
       <div class="stat"><b>${c.waitCount}</b><span>候補</span></div>
       ${c.capacity?`<div class="stat"><b>${Math.max(0,c.capacity-c.regCount)}</b><span>剩餘名額</span></div>`:""}</div>
-    <div class="reg-qr"><div class="svgbox">${qr}</div>
-      <div class="stack small"><b style="font-size:15px">這堂課的報名連結</b>
-        <div class="linkbox"><code>${esc(d.regUrl)}</code><button class="btn sm" data-copy="${esc(d.regUrl)}">複製連結</button></div>
-        <span class="muted">把連結或 QR Code 貼到公告、LINE 群組。同仁輸入工號就能報名，截止前可以自己取消；額滿後自動排候補，有人取消時依序遞補。</span>
-        <div class="row"><button class="btn sm" data-act="reg-qr">下載報名 QR Code 圖檔</button></div></div></div>
+    <div class="stack" style="margin-top:12px"><div class="label">這堂課的報名連結（貼到公告、LINE 群組，不需要登入）</div>
+      <div class="linkbox"><code>${esc(d.regUrl)}</code><button class="btn sm" data-copy="${esc(d.regUrl)}">複製連結</button><button class="btn sm" data-act="reg-qr">下載報名 QR Code 圖檔</button></div></div>
+    <div class="qr-preview">
+      <img id="reg-preview" alt="報名 QR Code 圖卡" src="">
+      <div class="stack small">
+        <b style="font-size:15px">報名 QR Code 圖卡</b>
+        <span class="muted">品牌褐灰底、上方標示「課程報名」，跟白底的簽到圖卡一眼就能分辨。可以列印張貼在布告欄，或直接把圖片傳到 LINE 群組。</span>
+        <span class="muted">同仁掃描後輸入工號就能報名，截止前可以自己取消；額滿後自動排候補，有人取消時依序遞補。</span>
+        <span>報名截止 <b class="mono" style="font-size:16px">${esc(c.regDeadline)}</b></span>
+      </div>
+    </div>
     ${regs.length?`<div class="tbl-wrap"><table><thead><tr><th class="num">#</th><th>工號</th><th>姓名</th><th>部門</th><th>公司別</th><th>報名時間</th><th>狀態</th><th>方式</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
       :`<div class="empty small">還沒有人報名。</div>`}`;
 }
@@ -3194,40 +3221,74 @@ function viewLog(){
 }
 
 /* ---------- QR Code 圖檔 ---------- */
-function qrCardCanvas(d, mode){
-  const c=d.course, reg=mode==="reg";
-  {
-    const qr=qrcode(0,"M"); qr.addData(reg?d.regUrl:d.studentUrl); qr.make();
-    const W=1200, H=1960, cv=document.createElement("canvas"); cv.width=W; cv.height=H;
-    const g=cv.getContext("2d"), sans='"Helvetica Neue","Huninn","PingFang TC","Microsoft JhengHei",sans-serif', serif=sans;
-    g.fillStyle="#FFFFFF"; g.fillRect(0,0,W,H); g.strokeStyle="#E0DAD6"; g.lineWidth=4; g.strokeRect(30,30,W-60,H-60);
-    g.textAlign="center"; g.fillStyle="#968576"; g.font=`500 38px ${sans}`; const lw=300, lh=Math.round(lw*logoImage.naturalHeight/(logoImage.naturalWidth||1)); if (logoImage.complete && logoImage.naturalWidth) g.drawImage(logoImage,(W-lw)/2,80,lw,lh);
-    g.fillText(`${c.host}｜教育訓練${reg?"報名":"簽到"}`, W/2, 310);
-    g.fillStyle="#000000"; g.font=`400 64px ${serif}`;
-    const lines=[]; let cur=""; for (const ch of c.name){ if (g.measureText(cur+ch).width>1020){ lines.push(cur); cur=ch; } else cur+=ch; } if (cur) lines.push(cur);
-    let y=405; lines.slice(0,2).forEach(l=>{ g.fillText(l,W/2,y); y+=82; });
-    g.fillStyle="#6B635C"; g.font=`400 34px ${sans}`; g.fillText(`${c.date}　${c.start}–${c.end}　講師 ${c.teacher}`, W/2, y+8);
-    const n=qr.getModuleCount(), cell=Math.floor(860/n), size=cell*n, qx=(W-size)/2, qy=y+70;
-    g.fillStyle="#000000"; for (let r=0;r<n;r++) for (let k=0;k<n;k++) if (qr.isDark(r,k)) g.fillRect(qx+k*cell, qy+r*cell, cell, cell);
-    const by=qy+size+90;
-    if (reg){
-      g.fillStyle="#6B635C"; g.font=`400 36px ${sans}`; g.fillText("報名截止", W/2, by);
-      g.fillStyle="#000000"; g.font=`600 84px "IBM Plex Mono",Menlo,Consolas,monospace`; g.fillText(c.regDeadline.slice(5), W/2, by+105);
-      g.fillStyle="#000000"; g.font=`500 40px ${sans}`; g.fillText("用手機相機掃描 QR Code，輸入工號完成報名", W/2, by+200);
-      g.fillStyle="#6B635C"; g.font=`400 32px ${sans}`; g.fillText(c.capacity?`名額 ${c.capacity} 人，額滿後可報名候補`:"不限名額", W/2, by+260);
-    } else {
-    g.fillStyle="#6B635C"; g.font=`400 36px ${sans}`; g.fillText("簽到碼", W/2, by);
-    g.fillStyle="#000000"; g.font=`600 110px "IBM Plex Mono",Menlo,Consolas,monospace`; g.fillText(d.code.replace(/(\d{3})(\d{3})/,"$1 $2"), W/2, by+120);
-    g.fillStyle="#000000"; g.font=`500 40px ${sans}`; g.fillText("用手機相機掃描 QR Code，輸入工號完成簽到", W/2, by+215);
-    g.fillStyle="#6B635C"; g.font=`400 32px ${sans}`; g.fillText(`簽到時段 ${c.signFrom}–${c.signTo}`, W/2, by+275);
-    }
-    return cv;
-  }
+const CARD_SANS='"Helvetica Neue","Huninn","PingFang TC","Microsoft JhengHei",sans-serif', CARD_MONO='"IBM Plex Mono",Menlo,Consolas,monospace';
+function wrapLines(g, text, maxW){ const out=[]; let cur=""; for (const ch of text){ if (g.measureText(cur+ch).width>maxW){ out.push(cur); cur=ch; } else cur+=ch; } if (cur) out.push(cur); return out; }
+function drawQr(g, qr, x, y, cell){ x=Math.round(x); y=Math.round(y); const n=qr.getModuleCount(); g.fillStyle="#000000"; for (let r=0;r<n;r++) for (let k=0;k<n;k++) if (qr.isDark(r,k)) g.fillRect(x+k*cell, y+r*cell, cell, cell); }
+function roundRect(g, x, y, w, h, r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+/** 依 CI：深色底（品牌褐灰 100%）上的標誌反白 */
+function whiteLogo(w, h){
+  const o=document.createElement("canvas"); o.width=w; o.height=h; const x=o.getContext("2d");
+  x.drawImage(logoImage,0,0,w,h); x.globalCompositeOperation="source-in"; x.fillStyle="#FFFFFF"; x.fillRect(0,0,w,h); return o;
 }
-function qrPreviewUrl(d){
-  const key=[d.course.id,d.code,d.course.name,d.course.date,d.course.start,d.course.end,d.course.signFrom,d.course.signTo,d.course.teacher].join("|");
+function qrCardCanvas(d, mode){
+  return mode==="reg" ? regCardCanvas(d) : signCardCanvas(d);
+}
+/* 簽到圖卡：白底、黑字 */
+function signCardCanvas(d){
+  const c=d.course, qr=qrcode(0,"M"); qr.addData(d.studentUrl); qr.make();
+  const W=1200, H=1960, cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const g=cv.getContext("2d"), sans=CARD_SANS;
+  g.fillStyle="#FFFFFF"; g.fillRect(0,0,W,H); g.strokeStyle="#E0DAD6"; g.lineWidth=4; g.strokeRect(30,30,W-60,H-60);
+  const lw=300, lh=Math.round(lw*logoImage.naturalHeight/(logoImage.naturalWidth||1));
+  if (logoImage.complete && logoImage.naturalWidth) g.drawImage(logoImage,(W-lw)/2,80,lw,lh);
+  g.textAlign="center"; g.fillStyle="#968576"; g.font=`500 38px ${sans}`; g.fillText(`嗨！來上課｜${c.host} 課堂簽到`, W/2, 310);
+  g.fillStyle="#000000"; g.font=`400 64px ${sans}`;
+  let y=405; wrapLines(g, c.name, 1020).slice(0,2).forEach(l=>{ g.fillText(l,W/2,y); y+=82; });
+  g.fillStyle="#6B635C"; g.font=`400 34px ${sans}`; g.fillText(`${c.date}　${c.start}–${c.end}　講師 ${c.teacher}`, W/2, y+8);
+  const n=qr.getModuleCount(), cell=Math.floor(860/n), size=cell*n, qy=y+70;
+  drawQr(g, qr, (W-size)/2, qy, cell);
+  const by=qy+size+90;
+  g.fillStyle="#6B635C"; g.font=`400 36px ${sans}`; g.fillText("簽到碼", W/2, by);
+  g.fillStyle="#000000"; g.font=`600 110px ${CARD_MONO}`; g.fillText(d.code.replace(/(\d{3})(\d{3})/,"$1 $2"), W/2, by+120);
+  g.fillStyle="#000000"; g.font=`500 40px ${sans}`; g.fillText("用手機相機掃描 QR Code，輸入工號完成簽到", W/2, by+215);
+  g.fillStyle="#6B635C"; g.font=`400 32px ${sans}`; g.fillText(`簽到時段 ${c.signFrom}–${c.signTo}`, W/2, by+275);
+  return cv;
+}
+/* 報名圖卡：品牌褐灰滿版底、反白標誌、「課程報名」標籤，與簽到圖卡一眼可分 */
+function regCardCanvas(d){
+  const c=d.course, qr=qrcode(0,"M"); qr.addData(d.regUrl); qr.make();
+  const sans=CARD_SANS, W=1200, n=qr.getModuleCount(), cell=Math.floor(780/n), size=cell*n;
+  const meas=document.createElement("canvas").getContext("2d"); meas.font=`400 64px ${sans}`;
+  const nameLines=wrapLines(meas, c.name, 1000).slice(0,2);
+  const nameTop=545, dateY=nameTop+(nameLines.length-1)*82+70, panelY=dateY+60, pad=44, panelH=size+pad*2, by=panelY+panelH+100;
+  const H=by+330, cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const g=cv.getContext("2d");
+  g.fillStyle="#968576"; g.fillRect(0,0,W,H);
+  g.strokeStyle="rgba(255,255,255,.45)"; g.lineWidth=3; g.strokeRect(34,34,W-68,H-68);
+  const lw=300, lh=Math.round(lw*logoImage.naturalHeight/(logoImage.naturalWidth||1));
+  if (logoImage.complete && logoImage.naturalWidth) g.drawImage(whiteLogo(lw,lh),(W-lw)/2,86,lw,lh);
+  // 標籤
+  g.textAlign="center"; g.textBaseline="middle"; g.font=`400 56px ${sans}`;
+  const tag="課程報名", tw=g.measureText(tag).width+150, th=104, ty=300;
+  g.fillStyle="#FFFFFF"; roundRect(g,(W-tw)/2,ty,tw,th,th/2); g.fill();
+  g.fillStyle="#5E5145"; g.fillText(tag, W/2, ty+th/2+2);
+  g.textBaseline="alphabetic";
+  g.fillStyle="rgba(255,255,255,.88)"; g.font=`400 36px ${sans}`; g.fillText(`嗨！來上課｜${c.host} 主辦`, W/2, ty+th+66);
+  g.fillStyle="#FFFFFF"; g.font=`400 64px ${sans}`;
+  nameLines.forEach((l,i)=>g.fillText(l, W/2, nameTop+i*82));
+  g.fillStyle="rgba(255,255,255,.88)"; g.font=`400 34px ${sans}`; g.fillText(`${c.date}　${c.start}–${c.end}　講師 ${c.teacher}`, W/2, dateY);
+  const pw=size+pad*2; g.fillStyle="#FFFFFF"; roundRect(g,(W-pw)/2,panelY,pw,panelH,32); g.fill();
+  drawQr(g, qr, (W-size)/2, panelY+pad, cell);
+  g.fillStyle="rgba(255,255,255,.88)"; g.font=`400 36px ${sans}`; g.fillText("報名截止", W/2, by);
+  g.fillStyle="#FFFFFF"; g.font=`600 92px ${CARD_MONO}`; g.fillText(c.regDeadline.slice(5), W/2, by+110);
+  g.font=`400 42px ${sans}`; g.fillText("用手機相機掃描 QR Code，輸入工號完成報名", W/2, by+200);
+  g.fillStyle="rgba(255,255,255,.88)"; g.font=`400 32px ${sans}`; g.fillText(c.capacity?`名額 ${c.capacity} 人，額滿後可報名候補`:"不限名額", W/2, by+262);
+  return cv;
+}
+function qrPreviewUrl(d, mode){
+  const c=d.course, key=[mode||"sign",c.id,d.code,c.name,c.date,c.start,c.end,c.signFrom,c.signTo,c.teacher,c.host,c.regDeadline,c.capacity].join("|");
   S.qrCache ||= {};
-  if (!S.qrCache[key]){ try { const u=qrCardCanvas(d).toDataURL("image/png"); if (!logoImage.complete) return u; S.qrCache[key]=u; } catch(e){ return ""; } }
+  if (!S.qrCache[key]){ try { const u=qrCardCanvas(d, mode).toDataURL("image/png"); if (!logoImage.complete) return u; S.qrCache[key]=u; } catch(e){ return ""; } }
   return S.qrCache[key];
 }
 async function downloadQr(btn, mode){
